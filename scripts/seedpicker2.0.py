@@ -219,11 +219,13 @@ def get_rmsd(traj, topology, sel_atoms=None):
         prmtop = md.load_topology(topology)
         traj = md.load(traj, top=prmtop, stride=1)
 
+    counter = 0
     for frame_idx in range(traj.n_frames):
-        rmsd = np.round(md.rmsd(traj, traj, frame=frame_idx, atom_indices=sel_atoms) * 10, 3)
+        rmsd = np.around(md.rmsd(traj, traj, frame=frame_idx, atom_indices=sel_atoms) * 10, 3)
+        print("{}".format(counter))
+        counter += 1
         yield rmsd
 
-    
 
 # Main algorithim 
 def seedpicker(labled_data, topfile, n_cores, stride, verbose=False, sel_atoms=None):
@@ -278,29 +280,22 @@ def seedpicker(labled_data, topfile, n_cores, stride, verbose=False, sel_atoms=N
     sys.stdout.write("\n" + s1_message + "\n")
     seedpicker_log.log_new_stage(s1_message)
 
-    # merging trajectories 
+    # merging trajectories and creating rmsd generator 
     merged_trajs = md.join(traj_namelist)
-
-    # Calculating rmsds
-    # merged_raw_rmsd_data = []
-    # for idx in range(merged_trajs.n_frames):
-    #     m_rmsd_data = np.round(md.rmsd(merged_trajs, merged_trajs, frame=idx, atom_indices=sel_atoms) * 10, 3)
-    #     merged_raw_rmsd_data.append(m_rmsd_data)
-    
-    # NOTE: geneorator placed here
-    merged_raw_rmsd_data = get_rmsd(merged_trajs, prmtop)
-    
-
-    # creating pandas df for avg and raw 
-    col_row_indx = []
+    raw_rmsd_data = get_rmsd(merged_trajs, prmtop)
+   
+   # creting index for dataframe
+    col_row_indx = [] 
     for tag, traj_obj in raw_trajs.items():
         for frame_num in range(traj_obj.n_frames):
             tag_frame = '{}_{}'.format(tag, frame_num)
             col_row_indx.append(tag_frame)
+            
 
     # creatign data frames 
-    raw_rmsd_df = pd.DataFrame(merged_raw_rmsd_data, index=col_row_indx, columns=col_row_indx)
+    raw_rmsd_df = pd.DataFrame((data for data in raw_rmsd_data), index=col_row_indx, columns=col_row_indx)
     avg_rmsd_df = pd.DataFrame(raw_rmsd_df.mean().round(3), columns=["avg_rmsd"])
+
 
     # writing mereged dataframe 
     raw_rmsd_df.to_csv('raw_rmsd_df.csv')
@@ -570,9 +565,9 @@ if __name__ in '__main__':
 
     # TODO: implement error handler for missing dependency 
     # checkin if the user has cpptraj executable
-    if shutil.which('cpptraj') is None:
-        print('ERROR: Missing dependency: Cpptraj')
-        raise MissingDependency("Cpptraj is not found in your system") # TODO: create a custome handler
+    # if shutil.which('cpptraj') is None:
+    #     print('ERROR: Missing dependency: Cpptraj')
+    #     raise MissingDependency("Cpptraj is not found in your system") # TODO: create a custome handler
         exit()
 
     # CLI arguments
