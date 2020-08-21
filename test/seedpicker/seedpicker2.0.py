@@ -1,0 +1,1 @@
+../../scripts/seedpicker2.0.py

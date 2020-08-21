@@ -1,9 +1,17 @@
+from moltools.io.loader import extract_contents
 
 
 class PdbEditor:
     
     def __init__(self, pdbfile):
-        self.pdbfile = self.extract(pdbfile)
+
+        # checking if it is a list or a file 
+        if isinstance(pdbfile, list):
+            self.pdbfile = pdbfile
+        else: 
+            contents = extract_contents(pdbfile)
+            self.pdbfile = contents 
+            
         self.atom = None
         self.header = None
         self.footer = None

@@ -36,8 +36,7 @@ def slicetraj(traj, outname, slice_indxs, fmt='nc'):
 def create_rst(traj: md.Trajectory, outname: str, idx: int):
     if idx is None:
         last_frame = traj.n_frames
-        traj[last_frame].save_amberst('{}_frame{}.rst'.format(outname,
-                                                              last_frame))
+        traj[last_frame].save_amberst('{}_frame{}.rst'.format(outname, last_frame))
 
     elif isinstance(idx, list):
         for i in idx:

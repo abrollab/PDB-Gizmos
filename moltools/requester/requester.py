@@ -1,8 +1,8 @@
 import os 
 import requests 
 
-
 from moltools.pdbeditor.PdbEditor import PdbEditor
+
 
 def opm_pdb(pdbid, store=False):
     """ Obtaining pdb structures from the OPM server 
@@ -11,9 +11,6 @@ def opm_pdb(pdbid, store=False):
     ---------
     pdbid {str} :     
     accession number that directes to a specific structureo
-
-    clean {bool} :
-    Removes the dummy atoms [Default: False]
 
     stored {bool} :
     Stores the pdb ID in memory. If set to False, then the 
@@ -33,9 +30,19 @@ def opm_pdb(pdbid, store=False):
             for lines in content:
                 dl_pdbfile.write(lines + "\n")
 
+
 def rcsb_pdb(pdbid, store=False):
     """ Obtaining pdb files from RCSB server"""
-    pass
+    API_URL = "https://files.rcsb.org/download/{}.pdb".format(pdbid.lower())
+    r = requests.get(API_URL)
+    rcsb_content = str(r.content).split("\\n")
+
+    if not store:
+        return rcsb_content
+    else:
+        with open("{}.pdb".format(pdbid), "w") as rcsb_file:
+            for line in rcsb_file:
+                rcsb_content.write(line + "\n")
 
 
     
