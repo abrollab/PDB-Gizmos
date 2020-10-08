@@ -1,1 +1,1 @@
-../../scripts/seedpicker2.0.py
+BZ²B2ã2Aå°ªBõBB2o-Aëç_B‹=ÄB1

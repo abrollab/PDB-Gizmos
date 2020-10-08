@@ -1,8 +1,6 @@
 import sys
 import subprocess
-import shlex
 import glob
-import tarfile
 import textwrap
 import argparse
 import os
@@ -23,7 +21,7 @@ def extract_charmm_files(charmm_file: str, charmm_outdir: str):
         os.system(tarcom)
  
     
-def getSystem(charmmFile: str, sysname: str, sysres: int, overwrite: bool):
+def getSystem(charmmFile, sysname, sysres, overwrite, type="membrane"):
     '''
     action:
     Obtains .pdb, .rst7, .parm files from charmm file and renames it to appropiate extensions required for the setup_amber.pl script.
@@ -68,13 +66,21 @@ def getSystem(charmmFile: str, sysname: str, sysres: int, overwrite: bool):
     print('MESSAGE: obtaining files for MD simulations...')
 
     # selecting the correct pdb file depending on which force field was selected
-    if os.path.exists('step5_charmm2amber.complete.pdb'):
-        print('DETECTED: CHARMM-GUI output contains the AMBER force field')
-        getFilesCmd = "cp step5_charmm2amber.complete.pdb step5_charmm2amber.rst7 step5_charmm2amber.parm7 {}".format(wdir)
-    else:
-        print('DETECTED: CHARMM-GUI output contains the CHARMM force field')
-        getFilesCmd = "cp step5_input.pdb step5_input.rst7 step5_input.parm7 {}".format(wdir)
-
+    if type == "membrane":
+        if os.path.exists('step5_charmm2amber.complete.pdb'):
+            print('DETECTED: CHARMM-GUI output contains the AMBER force field')
+            getFilesCmd = "cp step5_charmm2amber.complete.pdb step5_charmm2amber.rst7 step5_charmm2amber.parm7 {}".format(wdir)
+            subprocess.run(getFilesCmd.split(), shell=True)
+        else:
+            print('DETECTED: CHARMM-GUI output contains the CHARMM force field')
+            getFilesCmd = "cp step5_input.pdb step5_input.rst7 step5_input.parm7 {}".format(wdir)
+            subprocess.run(getFilesCmd.split(), shell=True)
+    
+    # TODO: add support for solvated models 
+    elif modle_type == "solvate":
+    #------------------------------ 
+    # extra block code for solvate
+    #------------------------------ 
     subprocess.run(getFilesCmd, shell=True)
     os.chdir(wdir)
     os.mkdir(amber_dir)
@@ -298,6 +304,9 @@ def help_message():
 
 
     [ Optional Arguments ]
+    -t,  --type         Type of model that was produces in CHARMM-GUI. [Default: membrane]
+                        [Choices: membrane, solvated]
+
     -r,  --sysres       The selected range of resid that you want to use for your simulation
                         [default: None]
 
@@ -331,7 +340,8 @@ if __name__ in '__main__':
                             help='Total number of residues of the system' )
     optional.add_argument('-o', '--overwrite', default=False, action='store_true', required=False,
                               help='Ignores the "FileExistsError" when using the same system name')
-
+    optional.add_argument('-t', '--tpye', type=str,default="membrane", choices=["membrane", "solvated"],
+                          required=False, help="Type of model that was created in CHARMM-gui") 
     args = parser.parse_args()
 
     # executing program

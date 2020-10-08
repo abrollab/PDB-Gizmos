@@ -484,40 +484,28 @@ def help_message():
 
     print(textwrap.dedent("""
     [Summary]
-
     Seedpicker.py is a brute-force algorithm that searches for a specific
     conformation that deviates greatly from other snapshots in a given
     trajectory.
-
     This program captures intrinsic and least populated conformations
     which could serve as aviable starting point to explore the
     conformational landscape.
-
     [Use Case Example]
-
     seedpicker.py -i traj_list.in -p 5g53_100ns_md.prmtop
-
     [Required arguments]:
     -i, --input             Input file containing all groupings of the
                             trajectories
-
     -t, --topology         The topology file prmtop
-
-
     [Optional arguments]:
     -c, --cores             Number of cores used for rmsd calculations
                             [default: 4]
-
     -s, --stride            Stide of frames that will be processed
                             [default: 1]
-
     -x, --cutoff            Cutoff value indicating if a new outlier is
                             found in the trajectories [default: 2.00]
-
     -o, --output            Write an output to the current directory. One
                             can select either matrix binary or csv. If
                             [Default: csv] [Choices: csv, matrix]
-
     -v, --verbose           Displays 20 lines of the rmsd data in each
                             stage
                             
@@ -525,7 +513,6 @@ def help_message():
                             for RMSD calculations. If none is specified,
                             all atoms will be used for calcutions.
                             [default: None]
-
     -a, --atomtype          Refers to what atoms the user wants to use
                             when calculating for RMSD. 
                             [default: CA]

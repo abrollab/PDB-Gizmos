@@ -1,16 +1,23 @@
+import os 
 import mdtraj as md
+from numpy.core.fromnumeric import trace
+import pandas as pd 
 import numpy as np
 
+def calculate_rmsd(target_trajobj, ref_trajobj, stride=1, threads=4):
+    """ a generator that returns a 1D rmsd array """
+    os.environ["OPM_NUM_THREADS"] = "{}".format(threads)
+    for frame_num in range(target_trajobj.n_frames):
+        rmsd = md.rmsd(target_trajobj, ref_trajobj, frame=frame_num)
+        yield rmsd 
 
-def traj_rmsd(traj, topology, stride=1, sel_atoms=None):
-    """ A genorator that returns rmsd values for each frame """
 
-    if not isinstance(traj, md.core.trajectory):
-        prmtop = md.load_topology(topology)
-        traj = md.load(traj, top=prmtop, stride=stride)
+def rmsd_df(target_trajobj, ref_trajobj, sel_atoms=None, threads=4):
+    """ returns a pandas DataFrame object containg the rmsd values per frame """
+    os.environ["OPM_NUM_THREADS"] = "{}".format(threads)
+    raw_rmsd = []
+    for frame_num in range(ref_trajobj.n_frames):
+        rmsd = np.round(md.rmsd(target_trajobj, ref_trajobj, frame=frame_num, atom_indices=sel_atoms) * 10, 3)
+        raw_rmsd.append(rmsd.tolist())
 
-    for frame_num in range(traj.n_frames):
-        raw_rmsd = np.round(md.rmsd(traj, traj, frame=frame_num, atom_indices=sel_atoms) * 10, 3)
-        yield raw_rmsd
-    
-        
+    return pd.DataFrame(raw_rmsd)

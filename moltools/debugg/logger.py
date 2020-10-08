@@ -33,7 +33,7 @@ class Logger:
         self.log_file.write('WARNING: {}\n'.format(w_message))
 
     def log_message(self, message ):
-        """ Writes a message long in the log"""
+        """ Writes a message log"""
         self.log_file.write('MESSAGE: {}\n'.format(message)) 
         
     def log_error(self, e_message):
