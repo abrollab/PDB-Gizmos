@@ -1,22 +1,29 @@
 # formulas that are used to calculate in trajectories 
 from math import sqrt, pow
+import mdtraj as md
 
-def compute_lenght(target, reference, atoms="all"):
+
+def compute_lenght(target, reference, atoms_sel="all"):
     """ obtains the distance between two points by using the distance forumal  """
+    
+    rmsd = md.rmsd(target, reference, atom_indice=atoms_sel)
+    return rmsd 
 
-    atom_selection = 
-
-    pass
 
 def compute_area(x,y,z):
     pass
+
+
+def computer_square_areai():
+    pass
+
 
 def compute_tetravol(X, Y, Z, x, y, z, b=12):
     """ computes the volume of an irregular tetrahedron 
     source: https://www.geeksforgeeks.org/program-to-find-the-volume-of-an-irregular-tetrahedron/
     
-    
     """
+
     # collecting all varaible
     xPow = pow(x, 2)  
     yPow = pow(y, 2)  
@@ -27,15 +34,17 @@ def compute_tetravol(X, Y, Z, x, y, z, b=12):
 
     # computing the area 
     a = (4 * (xPow * yPow * zPow)  
-        - yPow * pow((xPow + zPow - XPow), 2)  
+        - xPow * pow((yPow + zPow - XPow), 2)  
         - yPow * pow((zPow + xPow - YPow), 2)  
-        - zPow * pow((yPow + xPow - ZPow), 2)  
+        - zPow * pow((xPow + yPow - ZPow), 2)  
         + (yPow + zPow - XPow) * (zPow + xPow - YPow)  
-        * (yPow + xPow - ZPow))
-     
-    vol = round((sqrt(a))/b, 3)
+        * (xPow + yPow - ZPow))
     
-    return vol  
+    # computing volume 
+    vol = sqrt(a)
+    vol /= b
+    return round(vol, 3)
+    
 
 def geometric_summary():
     """ Provides all possible combination in the math modules to see if the conformational spaces is increasing"""
