@@ -21,24 +21,26 @@ def computer_square_areai():
 def compute_tetravol(X, Y, Z, x, y, z, b=12):
     """ computes the volume of an irregular tetrahedron 
     source: https://www.geeksforgeeks.org/program-to-find-the-volume-of-an-irregular-tetrahedron/
-    
     """
 
     # collecting all varaible
-    xPow = pow(x, 2)  
-    yPow = pow(y, 2)  
-    zPow = pow(z, 2)  
-    XPow = pow(X, 2)  
-    YPow = pow(Y, 2)  
-    ZPow = pow(Z, 2) 
-
-    # computing the area 
-    a = (4 * (xPow * yPow * zPow)  
-        - xPow * pow((yPow + zPow - XPow), 2)  
-        - yPow * pow((zPow + xPow - YPow), 2)  
-        - zPow * pow((xPow + yPow - ZPow), 2)  
-        + (yPow + zPow - XPow) * (zPow + xPow - YPow)  
-        * (xPow + yPow - ZPow))
+    uPow = pow(X, 2)  
+    vPow = pow(Y, 2)  
+    wPow = pow(Z, 2)  
+    UPow = pow(x, 2)  
+    VPow = pow(y, 2)  
+    WPow = pow(z, 2)  
+    
+    a = (4 * (uPow * vPow * wPow)  
+        - uPow * pow((vPow + wPow - UPow), 2)  
+        - vPow * pow((wPow + uPow - VPow), 2)  
+        - wPow * pow((uPow + vPow - WPow), 2)  
+        + (vPow + wPow - UPow) * (wPow + uPow - VPow)  
+        * (uPow + vPow - WPow))
+    
+    if a < 0:
+        # negative area leads to domains errors when conduting square root
+        raise ValueError("Obtained negative area: {} A^2.".format(a))
     
     # computing volume 
     vol = sqrt(a)
@@ -50,3 +52,4 @@ def geometric_summary():
     """ Provides all possible combination in the math modules to see if the conformational spaces is increasing"""
     
     pass
+        

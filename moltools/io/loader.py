@@ -36,4 +36,4 @@ def iterload_by_group(labled_traj, topology, group_id):
         if tag.startswith(group_id):
            selelcted_group.append(tag)
     
-    yield selected_group, 
+    yield selected_group 
