@@ -50,6 +50,4 @@ def compute_tetravol(X, Y, Z, x, y, z, b=12):
 
 def geometric_summary():
     """ Provides all possible combination in the math modules to see if the conformational spaces is increasing"""
-    
     pass
-        

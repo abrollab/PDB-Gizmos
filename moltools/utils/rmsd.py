@@ -11,6 +11,43 @@ def calculate_rmsd(target_trajobj, ref_trajobj, stride=1, threads=4):
         rmsd = md.rmsd(target_trajobj, ref_trajobj, frame=frame_num)
         yield rmsd 
 
+def rmsd_from_crystal(trajobj,  crystal, frame=1, atom_ids=None):
+    """rmsd_from_crystal
+
+    Caclulates the rmsd between selected frames of a trajectory 
+    and a known crystal structure
+
+    Parameters
+    ----------
+    trajobj : MdTraj obj 
+        MdTrajectory object container that holds the trajectory 
+    
+    crystal : MdTraj obj
+        Md Trajector object that contains the pdb informations.
+        Hint: use md.load("path/to/pdb") in order to conver
+        your pdb file into and Md Trajobject 
+    
+    frame : int
+        Selected frame number from the corresponding "traj" input
+        [default: frame=1]
+    
+    atom_ids : list[int] or np.array[int]
+        a list or array of postive integers that will be focused 
+        when conducting rmsd calculations
+    
+    returns
+    -------
+    float 
+        rmsd value    
+    """
+    
+    # load the crystal structure into a pdb obj
+    if not isinstance(trajobj, md.Trajectory) and not isinstance(crystal, md.Trajectory):
+        raise ValueError("Inncorrect format provided. trajectory and pdbfiles must be in md.Trajectory format you have prodvided traj:{}, pdb:{}".format(type(trajobj), type(crystal)))
+    
+    rmsd = md.rmsd(crystal, trajobj, frame=frame, atom_indices=atom_ids)
+    return rmsd 
+
 
 def rmsd_df(target_trajobj, ref_trajobj, sel_atoms=None, threads=4):
     """ returns a pandas DataFrame object containg the rmsd values per frame """
