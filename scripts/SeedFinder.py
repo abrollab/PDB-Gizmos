@@ -78,7 +78,7 @@ def find_seeds(rmsd_df, n_seeds):
     print("These are the selected seeds... {}".format(highest_rmsd))
     return highest_rmsd
 
-def get_distance(seeds, topobj):
+def get_distance(seeds, topobj, sel_atoms=None):
     """ Returns a dictionary of distances of selected seeds"""
     labled_traj = {}
     
@@ -96,7 +96,7 @@ def get_distance(seeds, topobj):
     for seedx, seedy in comb_pairs:
         seedx_name, seedx_frame = tuple(seedx.rsplit("_", 1))
         seedy_name, seedy_frame = tuple(seedy.rsplit("_", 1))
-        dist = np.round(md.rmsd(labled_traj[seedx], labled_traj[seedy])*10, 3)
+        dist = np.round(md.rmsd(labled_traj[seedx], labled_traj[seedy], atom_indices=sel_atoms)*10, 3)
 
         print("distance between {} frame:{} and {} frame:{} is {}".format(seedx_name, seedx_frame, seedy_name, seedy_frame, dist))    
         dist_lables["{} -- {}".format(seedx, seedy)] = round(float(dist),3)
@@ -169,7 +169,7 @@ if __name__ == "__main__":
         cpptraj_infiles(trajname, frame, args.topology, args.stride)
     
     
-    labled_dists = get_distance(selected_seeds, prmtop)
+    labled_dists = get_distance(selected_seeds, prmtop, atoms)
     dist_values = sorted(list(labled_dists.values()),reverse=True)
     print(dist_values)
 
