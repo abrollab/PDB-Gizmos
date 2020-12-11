@@ -13,7 +13,6 @@ import pandas as pd
 import numpy as np
 
 #moltools imports
-sys.path.append('/Users/erikserrano/Documents/Work/CSUN/Ravi/Porjects/PdbToolsPackage_project/pdbTools')
 from moltools.utils.trajmath import compute_tetravol
 
 def get_index(trajlist, topology, stride):
