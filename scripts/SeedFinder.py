@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 
 #moltools imports
+sys.path.append('/Users/erikserrano/Documents/Work/CSUN/Ravi/Porjects/PdbToolsPackage_project/pdbTools')
 from moltools.utils.trajmath import compute_tetravol
 
 def get_index(trajlist, topology, stride):
@@ -166,21 +167,11 @@ if __name__ == "__main__":
         trajname = "_".join(lables[:-1])
         frame = int(lables[-1])
         cpptraj_infiles(trajname, frame, args.topology, args.stride)
-<<<<<<< HEAD
 
 
-=======
-    
-    
->>>>>>> cf7b52556c18a2b1f4e8f2523a4e192156741510
     labled_dists = get_distance(selected_seeds, prmtop, atoms)
-    dist_values = sorted(list(labled_dists.values()),reverse=True)
+    dist_values = sorted(list(labled_dists.values()), reverse=True)
     print(dist_values)
 
     sampled_region_calc = compute_tetravol(*dist_values)
     print("samples region is {} A^3".format(sampled_region_calc))
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> cf7b52556c18a2b1f4e8f2523a4e192156741510
