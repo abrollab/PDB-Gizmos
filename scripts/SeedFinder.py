@@ -27,16 +27,26 @@ def get_index(trajlist, topology, stride):
 
     return indx
 
-def cpptraj_infiles(f_name, frame, topfile, stride):
+def cpptraj_infile(f_name, frame, topfile, stride):
+    """ creates a cpptraj infile 
+    
+    returns:
+        File path to the cpptraj.in file.
+    """
+    
     name = f_name.split(".")[0]
-    new_name = "{}_{}.rst".format(name, frame)
+    new_name = "{}_{}".format(name, frame)
+    infile_name = "cpptraj_{}_{}.in".format(name, frame)
+    cpptraj_frame = (frame+1)*stride
     print("writting cpptraj infile for seed traj: {0}_frame: {1} ----> cpptraj_{0}_{1}.in".format(name, frame))
-    with open("cpptraj_{}_{}.in".format(name, frame), "w") as cppfile:
+    with open(infile_name, "w") as cppfile:
         cppfile.write("parm {}\n".format(topfile))
-        cppfile.write("trajin {0}.nc {1} {1}\n".format(name, frame*stride))
-        cppfile.write("trajout {} restart\n".format(new_name))
+        cppfile.write("trajin {0}.nc {1} {1}\n".format(name, cpptraj_frame))
+        cppfile.write("trajout {}.pdb".format(new_name))
+        cppfile.write("trajout {}.rst restart\n".format(new_name))
         cppfile.write("run")
 
+    return os.path.abspath(infile_name)
 
 def loader(trajlist, topology, stride=1):
     """ Load the preprocessed trajectoy onto memeory and returns a md.Traj
@@ -103,6 +113,12 @@ def get_distance(seeds, topobj, sel_atoms=None):
 
     return dist_lables
 
+def exec_cpptraj(infile):
+    """ calls the cpptraj program with the created script from SeedFinder"""
+    cmd = "cpptraj -i {}".format(infile).split()
+    subprocess.run(cmd, shell=False)
+
+
 def help_message():
     print(textwrap.dedent("""
     -i, --input         Traejctories files
@@ -150,9 +166,9 @@ if __name__ == "__main__":
     else:
         atoms = args.atomtype
 
-    # preprocessing the trajectories
-   # if shutil.which("cpptraj") is None:
-   #     raise FileNotFoundError("The 'cpptraj' cannot be found")
+    #preprocessing the trajectories
+    if shutil.which("cpptraj") is None:
+        raise FileNotFoundError("The 'cpptraj' cannot be found")
 
     print("Selected atom ids:\n", atoms)
     rmsd = calculate_rmsd(loaded_data, atoms)
@@ -165,7 +181,8 @@ if __name__ == "__main__":
         lables = tuple(seed_name.split("_"))
         trajname = "_".join(lables[:-1])
         frame = int(lables[-1])
-        cpptraj_infiles(trajname, frame, args.topology, args.stride)
+        infile = cpptraj_infile(trajname, frame, args.topology, args.stride)
+        exec_cpptraj(infile)
 
 
     labled_dists = get_distance(selected_seeds, prmtop, atoms)
