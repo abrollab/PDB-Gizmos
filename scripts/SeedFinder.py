@@ -48,19 +48,21 @@ def cpptraj_infile(f_name, frame, topfile, stride):
 
     return os.path.abspath(infile_name)
 
-def loader(trajlist, topology, stride=1):
+def loader(trajlist, topology, stride=1, atom_sel="protein"):
     """ Load the preprocessed trajectoy onto memeory and returns a md.Traj
     and md.Topology object"""
 
     if not isinstance(trajlist, list):
         trajlist = list(trajlist)
+        
+    atom_idx = select_atoms(topology, atom_sel)
 
-    mergedtraj_obj = md.join([md.load(traj, top=topology, stride=stride) for traj in trajlist])
-    return mergedtraj_obj
+    mereged_obj = md.load(trajlist, top=topology, stride=stride).atom_slice(atom_idx)
+    return mereged_obj
 
 
-def select_atoms(topology, atomtypes):
-    atom_idx = md.load_topology(topology).select(atomtypes)
+def select_atoms(topobj, atomtypes):
+    atom_idx = md.load_topology(topobj).select(atomtypes)
     return atom_idx
 
 
@@ -87,7 +89,7 @@ def find_seeds(rmsd_df, n_seeds):
     print("These are the selected seeds... {}".format(highest_rmsd))
     return highest_rmsd
 
-def get_distance(seeds, topobj, sel_atoms=None):
+def get_distance(seeds, topobj, sel_atoms):
     """ Returns a dictionary of distances of selected seeds"""
     labled_traj = {}
 
@@ -95,7 +97,7 @@ def get_distance(seeds, topobj, sel_atoms=None):
         lables = tuple(seed_name.split("_"))
         trajname = "_".join(lables[:-1])
         frame = int(lables[-1])
-        seed = md.load(trajname, top=topobj)[frame]
+        seed = md.load(trajname, top=topobj)[frame].atom_slice(sel_atoms)
         labled_traj["{}_{}".format(trajname, frame)] = seed
         print(seed)
 
@@ -105,7 +107,7 @@ def get_distance(seeds, topobj, sel_atoms=None):
     for seedx, seedy in comb_pairs:
         seedx_name, seedx_frame = tuple(seedx.rsplit("_", 1))
         seedy_name, seedy_frame = tuple(seedy.rsplit("_", 1))
-        dist = np.round(md.rmsd(labled_traj[seedx], labled_traj[seedy], atom_indices=sel_atoms)*10, 3)
+        dist = np.round(md.rmsd(labled_traj[seedx], labled_traj[seedy])*10, 3)
 
         print("distance between {} frame:{} and {} frame:{} is {}".format(seedx_name, seedx_frame, seedy_name, seedy_frame, dist))
         dist_lables["{} -- {}".format(seedx, seedy)] = round(float(dist),3)
@@ -130,7 +132,7 @@ def help_message():
     -n, --numberseeds   Number of seeds (locked at 4)
 
     -a, --atomtype      Range of atoms taken account for calculations
-                        [default = "all"]
+                        [default = "protein"]
                         [Options: "backbone","CA","sidechain", "protein",
                         "protein and sidechain", "protein and backbone"]
                         """))
@@ -152,7 +154,7 @@ if __name__ == "__main__":
     parser.add_argument('-t', '--topology', type=str, required=True)
     parser.add_argument('-s', '--stride', type=int, required=False, default=1)
     parser.add_argument('-n', '--numberseeds', type=int, required=False, default=4)
-    parser.add_argument('-a', '--atomtype', type=str, default="sidechain", choices=["all","backbone","CA","sidechain", "protein", "protein and sidechain", "protein and backbone"])
+    parser.add_argument('-a', '--atomtype', type=str, default="protein", choices=["backbone","CA","sidechain", "protein", "protein and sidechain", "protein and backbone"])
     args = parser.parse_args()
 
     # executing program
@@ -161,14 +163,12 @@ if __name__ == "__main__":
     indx = get_index(args.input, prmtop, stride=args.stride)
 
     # atom selection if it is not flagged default is None --> all atoms (mdtraj docs)
-    if args.atomtype is not None:
-        atoms = select_atoms(args.topology, args.atomtype)
-    else:
-        atoms = args.atomtype
+    atoms = select_atoms(args.topology, args.atomtype)
+   
 
     #preprocessing the trajectories
-    if shutil.which("cpptraj") is None:
-        raise FileNotFoundError("The 'cpptraj' cannot be found")
+    #if shutil.which("cpptraj") is None:
+    #    raise FileNotFoundError("The 'cpptraj' cannot be found")
 
     print("Selected atom ids:\n", atoms)
     rmsd = calculate_rmsd(loaded_data, atoms)
@@ -182,12 +182,16 @@ if __name__ == "__main__":
         trajname = "_".join(lables[:-1])
         frame = int(lables[-1])
         infile = cpptraj_infile(trajname, frame, args.topology, args.stride)
-        exec_cpptraj(infile)
+        print("executing cpptraj with {}".format(infile))
+        #exec_cpptraj(infile)
 
 
     labled_dists = get_distance(selected_seeds, prmtop, atoms)
-    dist_values = sorted(list(labled_dists.values()), reverse=True)
-    print(dist_values)
+    dist_values = list(labled_dists.values())
+    print("\nDEBUGG: before swap: {}".format(dist_values))
+    dist_values = dist_values[:4] + [dist_values[-1]] + [dist_values[-2]] # swapping last two 
+    print("DEBUGG: After swap: {}\n".format(dist_values))
+    # print("DEBUGG: edge distances are: {}\n".format(dist_values))
 
     sampled_region_calc = compute_tetravol(*dist_values)
     print("samples region is {} A^3".format(sampled_region_calc))
