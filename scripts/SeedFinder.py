@@ -164,11 +164,10 @@ if __name__ == "__main__":
 
     # atom selection if it is not flagged default is None --> all atoms (mdtraj docs)
     atoms = select_atoms(args.topology, args.atomtype)
-   
 
     #preprocessing the trajectories
-    #if shutil.which("cpptraj") is None:
-    #    raise FileNotFoundError("The 'cpptraj' cannot be found")
+    if shutil.which("cpptraj") is None:
+       raise FileNotFoundError("The 'cpptraj' cannot be found")
 
     print("Selected atom ids:\n", atoms)
     rmsd = calculate_rmsd(loaded_data, atoms)
@@ -188,9 +187,7 @@ if __name__ == "__main__":
 
     labled_dists = get_distance(selected_seeds, prmtop, atoms)
     dist_values = list(labled_dists.values())
-    print("\nDEBUGG: before swap: {}".format(dist_values))
     dist_values = dist_values[:4] + [dist_values[-1]] + [dist_values[-2]] # swapping last two 
-    print("DEBUGG: After swap: {}\n".format(dist_values))
     # print("DEBUGG: edge distances are: {}\n".format(dist_values))
 
     sampled_region_calc = compute_tetravol(*dist_values)
