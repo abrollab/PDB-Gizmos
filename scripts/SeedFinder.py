@@ -42,7 +42,7 @@ def cpptraj_infile(f_name, frame, topfile, stride):
     with open(infile_name, "w") as cppfile:
         cppfile.write("parm {}\n".format(topfile))
         cppfile.write("trajin {0}.nc {1} {1}\n".format(name, cpptraj_frame))
-        cppfile.write("trajout {}.pdb".format(new_name))
+        cppfile.write("trajout {}.pdb\n".format(new_name))
         cppfile.write("trajout {}.rst restart\n".format(new_name))
         cppfile.write("run")
 
