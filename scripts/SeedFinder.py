@@ -28,16 +28,16 @@ def get_index(trajlist, topology, stride):
     return indx
 
 def cpptraj_infile(f_name, frame, topfile, stride):
-    """ creates a cpptraj infile 
-    
+    """ creates a cpptraj infile
+
     returns:
         File path to the cpptraj.in file.
     """
-    
+
     name = f_name.split(".")[0]
     new_name = "{}_{}".format(name, frame)
     infile_name = "cpptraj_{}_{}.in".format(name, frame)
-    cpptraj_frame = (frame+1)*stride
+    cpptraj_frame = (frame*stride)+1
     print("writting cpptraj infile for seed traj: {0}_frame: {1} ----> cpptraj_{0}_{1}.in".format(name, frame))
     with open(infile_name, "w") as cppfile:
         cppfile.write("parm {}\n".format(topfile))
@@ -54,7 +54,7 @@ def loader(trajlist, topology, stride=1, atom_sel="protein"):
 
     if not isinstance(trajlist, list):
         trajlist = list(trajlist)
-        
+
     atom_idx = select_atoms(topology, atom_sel)
 
     mereged_obj = md.load(trajlist, top=topology, stride=stride).atom_slice(atom_idx)
@@ -187,7 +187,7 @@ if __name__ == "__main__":
 
     labled_dists = get_distance(selected_seeds, prmtop, atoms)
     dist_values = list(labled_dists.values())
-    dist_values = dist_values[:4] + [dist_values[-1]] + [dist_values[-2]] # swapping last two 
+    dist_values = dist_values[:4] + [dist_values[-1]] + [dist_values[-2]] # swapping last two
     # print("DEBUGG: edge distances are: {}\n".format(dist_values))
 
     sampled_region_calc = compute_tetravol(*dist_values)
