@@ -1,123 +1,275 @@
+import os
 import sys
-import subprocess
 import glob
+import shutil
 import textwrap
 import argparse
-import os
+import subprocess
+import urllib.request
 
-# version 
-__version__ = '2.2.10'
 
-def extract_charmm_files(charmm_file: str, charmm_outdir: str):
+# version
+__version__ = '2.3.0'
+
+
+def reset(working_dir, sys_name):
     """
-    Function that extracts the CHARMM-GUI files. Only support tar and tgz files
+    [Summary]:
+        - removes the created folders and files during the program if an error occurs.
+    [input]
+        - wdir {string} => working directory where the charmm2amber was executed
     """
 
-    if charmm_file.endswith('.tar'):
-        tarcom = f'mkdir {charmm_outdir} && tar xf {charmm_file} -C {charmm_outdir} --strip-components 1'
-        os.system(tarcom)
-    elif charmm_file.endswith('.tgz'):
-        tarcom = f'mkdir {charmm_outdir} && tar xzf {charmm_file} -C {charmm_outdir} --strip-components 1'
-        os.system(tarcom)
- 
-    
-def getSystem(charmmFile, sysname, sysres, overwrite, type="membrane"):
-    '''
-    action:
-    Obtains .pdb, .rst7, .parm files from charmm file and renames it to appropiate extensions required for the setup_amber.pl script.
+    # get all the files fom the current working directory
+    os.chdir(working_dir)
+    rm_files = glob.glob(f'{sys_name}_md.pdb') + glob.glob(f'{sys_name}_md.inpcrd') + glob.glob(f'{sys_name}_md.rst7') + glob.glob(f'{sys_name}_md.parm7') + glob.glob(f'{sys_name}_md.prmtop')
 
-    input:
-    requires arguments from the user that specifies the system name and number of residues
+    # obtaining raw files from
+    unamed_files = glob.glob('step5_charmm2amber*pdb') + glob.glob('step5_charmm2amber*inpcrd') + glob.glob('step5_charmm2amber*rst7') + glob.glob('step5_charmm2amber*prmtop') + glob.glob('step5_charmm2amber*parm7')
+    labled_dirs = glob.glob(f'{sys_name}_CHARMM-GUI') + glob.glob(f'{sys_name}_AMBER')
 
-    output:
-    A directory containing the necessary files to start AMBER simulations.
-    '''
-    # getting current dirrectory
+    all_files = rm_files + unamed_files + labled_dirs
+
+    # iterate the files and check with
+    for files in all_files:
+        print("overwriting {}".format(files))
+        subprocess.run(f'rm -rf {files}', shell=True)
+
+
+def decompress_charmmfile(charmm_tgz, charmm_outdir):
+    """
+    Function that extracts the CHARMM-GUI files. Only support tar and tgz files.
+    Returns the path to the extracted CHARMM-GUI file
+    """
+    url = "http://www.charmm-gui.org/?doc=input/download&jobid={}".format(charmm_tgz)
+    extracted_file = "{}.tgz".format(charmm_outdir)
+    #extract_cmd = 'tar xzf {} -C {} --strip-components 1'.format(charmm_tgz, charmm_outdir).split()
+
+    if charmm_tgz.endswith('.tar') or charmm_tgz.endswith('.tgz'):
+        # extracting download tgz file
+        print("extracting from {}".format(charmm_tgz))
+        shutil.unpack_archive(charmm_tgz, charmm_outdir)
+
+        if not os.path.exists(charmm_outdir):
+            raise FileNotFoundError("Extracted CHARMM-GUI directory cannot be found")
+        return os.path.abspath(charmm_outdir)
+
+    elif charmm_tgz.isdigit():
+        # download tgz file
+        print("Using Job ID {} to download CHARMM-GUI file".format(charmm_tgz))
+        urllib.request.urlretrieve(url, extracted_file)
+
+        # extracting contents from downloaded file
+        print("Extracting contents from {}".format(extracted_file))
+        shutil.unpack_archive(extracted_file, charmm_outdir)
+        if not os.path.exists(charmm_outdir):
+            raise FileNotFoundError("Extracted CHARMM-GUI directory cannot be found")
+
+        return os.path.abspath(charmm_outdir)
+
+    else:
+        raise ValueError("Invalid input was provided")
+
+def clean_up(cdir, c_file, amber_dir, charmm_dir):
+    """ cleans the envioment where the script was executed and places
+    all data in  the amber folder """
+
+    print("Cleaning up environment.")
+    os.chdir(cdir)
+    shutil.move(c_file, amber_dir)
+    shutil.move(charmm_dir, amber_dir)
+    print("All data has been moved to: ./{}".format(os.path.relpath(amber_dir)))
+
+def res_count(pdbfile):
+    """
+    Counts the number of residues in the system.
+    Returns (int):
+        total number of resiudes.
+    """
+    print('Obtaining number of residues')
+    with open(pdbfile, 'r') as f:
+        CA_count = 0
+        for data in f:
+            lines = data.split()
+            if "ATOM" == lines[0] and "CA" == lines[2]:
+                CA_count = CA_count + 1
+        print("There is a total of {} resiudes in this system".format(CA_count))
+        return CA_count
+
+
+def extract_and_format(charmm_dir, sysname, out_amber_dir):
+    """
+    Prodcedual function that extracts files within from the CHARMM-GUI
+    file and formats it to
+    """
+    cwd = os.getcwd()
+    ext_trans = {
+        ".pdb" : ".pdb",
+        ".rst7": ".inpcrd",
+        ".parm7" : ".prmtop"
+    }
+
+    # checking if the charmm_file exists
+    if not os.path.exists(charmm_file):
+        raise FileNotFoundError("CHARMM-GUI file does not exists")
+
+    print('creating folders')
+    os.mkdir(out_amber_dir)
+    amber_dir = os.path.abspath(out_amber_dir)
+    # Goes into the CHARMM-gui folder and then into amber folder and obtains the .pdb .rst7 and
+    print("Extracting and formating files for AMBER simulations")
+    for path, dir, files in os.walk(charmm_dir):
+        if path.endswith("amber"):
+            os.chdir(path)
+            if os.path.exists('step5_charmm2amber.complete.pdb'):
+                print('DETECTED: CHARMM-GUI outputs contains AMBER force fields')
+                charmm_files = ["step5_charmm2amber.complete.pdb", "step5_charmm2amber.rst7", "step5_charmm2amber.parm7"]
+                for charm_file in charmm_files:
+                    shutil.copy(charm_file, amber_dir)
+            else:
+                print('DETECTED: CHARMM-GUI outputs contains CHARMM or CHARMM36m force fields')
+                charmm_files = ["step5_input.pdb", "step5_input.rst7", "step5_input.parm7"]
+                for charm_file in charmm_files:
+                    shutil.copy(charm_file, amber_dir)
+
+    # checks if the script is in the amber folder
+    if os.getcwd() == cwd:
+        raise FileNotFoundError("The 'amber' directory was not found within the extracted CHARMM-GUI folder")
+
+    os.chdir(amber_dir)
+
+    # renaming files to the appropiate extensions
+    amber_files = glob.glob("*")
+    if len(amber_files) != 3:
+        raise ValueError("Incorrect number of files were extracted from the CHARMM-GUI folder. ")
+
+    for file in amber_files:
+        _, ext = os.path.splitext(file)
+        name = file.replace(file, "{}_md{}".format(sysname, ext_trans[ext]))
+        os.rename(file, name)
+    os.chdir(cwd)
+
+
+def help_message():
+    print(textwrap.dedent("""
+    ###########################
+    Charmm2amber Version: {}
+    ###########################
+
+    [ Summary ]
+    Charrm2amber is a program that allows the users to create on the fly MD simulation read files.
+    The program only requires the compressed files (.tar or .tgz) obtained from CHARMM-GUI and also
+    provide a name for the system your are creating.
+
+    [ Use case Example ]
+    python charmm2amber.py -i chamm_gui.tgz -s a2a_5g53_active
+    Display the help menu (3 ways):
+    python charmm2amber.py
+    python charmm2amber.py -h
+    python charmm2amber.py --help
+
+    [ Help menu ]
+    -h, --help          Displays the help message when it appears
+
+    -v, --version       Displays the current version installed
+    [ Required Arguments ]
+    -i, --input         The compressed files (.tgz or .tar) obtained from CHARMM-GUI
+    -s, --sysname       The name of the system that will used in creating the simulation
+                        files
+    [ Optional Arguments ]
+    -t,  --type         Type of model that was produces in CHARMM-GUI. [Default: membrane]
+                        [Choices: membrane, solvated]
+    -r,  --sysres       The selected range of resid that you want to use for your simulation
+                        [default: None]
+    -o, --overwrite     Overwrite existing CHARMM-GUI and AMBER
+                          """.format(__version__)))
+    sys.exit()
+
+
+if __name__ == "__main__":
+
+    # help options
+    if len(sys.argv) == 1:
+        help_message()
+
+    elif sys.argv[1] == '--help' or sys.argv[1] == '-h':
+        help_message()
+
+    elif sys.argv[1] == '--version' or sys.argv[1] == '-v':
+        print('charmm2amber {}'.format(__version__))
+        sys.exit()
+
+    # CLI arguments
+    parser = argparse.ArgumentParser(add_help=False)
+    required = parser.add_argument_group('required arguments')
+    optional = parser.add_argument_group('optional arguments')
+    required.add_argument('-i', '--input', type=str, required=True)
+    required.add_argument('-s', '--sysname', type=str, required=True)
+    optional.add_argument('-r', '--sysres', type=int, required=False, default=None)
+    optional.add_argument('-o', '--overwrite', default=False, action='store_true', required=False)
+    #optional.add_argument('-t', '--tpye', type=str,default="membrane", choices=["membrane", "solvated"], required=False)
+    args = parser.parse_args()
+
+    # checking if any files charmm or amber files exists
     wdir = os.getcwd()
+    comp_file = "{}_CHARMM-GUI.tgz".format(args.sysname)
+    pdb_file = "{}_md.pdb".format(args.sysname)
+    prmtop_file = "{}_md.prmtop".format(args.sysname)
+    rst_file = "{}_md.rst".format(args.sysname)
+    charmm_dir_name = "{}_CHARMM-GUI".format(args.sysname)
+    amber_dir_name = "{}_AMBER".format(args.sysname)
 
-    # checks if the file exists
-    if not os.path.exists(charmmFile):
-        raise FileNotFoundError(f"The file {args.input} does not exists. Please check the name of your input file")
 
-    # Overwrite conditional
-    charmm_dir = '{}_CHARMM-GUI'.format(sysname)
-    if os.path.exists(charmm_dir) and overwrite == False:
-        reset(wdir, sysname)
-        raise FileExistsError(f'The directory {charmm_dir} already exists. Please execute this porgram in a new directory or use the "-o" options to overwrite the existing files')
-    elif os.path.exists(charmm_dir) and overwrite:
-        print('MESSAGE: Overwriting previous CHARMM-GUI directories...')
-        subprocess.run(f'rm -rf {charmm_dir}', shell=True)
+    # checking if the directories are true
+    if os.path.exists(charmm_dir_name) and args.overwrite == False:
+        raise FileExistsError('The directory {} already exists. Please execute this porgram in a new directory or use the "-o" options to overwrite the existing files'.format(charmm_dir_name))
+    elif os.path.exists(charmm_dir_name) and args.overwrite:
+        print('WARNING: Overwriting previous CHARMM-GUI directories...')
+        reset(wdir, args.sysname)
 
-    # checks if the amber file exists
-    amber_dir = f'{sysname}_AMBER'
-    if os.path.exists(amber_dir) and overwrite == False:
-        raise FileExistsError(f'The directory {amber_dir} already exists. Please execute this program in a new diretiory or use -o to overwrite the existing directory')
-    elif os.path.exists(amber_dir)  and overwrite:
-        print('MESSAGE: Overwriting previous AMBER directories...')
-        subprocess.run(f'rm -rf {amber_dir}', shell=True)
+    if os.path.exists(amber_dir_name) and args.overwrite == False:
+        raise FileExistsError('The directory {} already exists. Please execute this program in a new diretiory or use -o to overwrite the existing directory'.format(amber_dir_name))
+    elif os.path.exists(amber_dir_name) and args.overwrite:
+        print('WARNING: Overwriting previous AMBER directories...')
+        rm_cmd = "rm -f {}".format(amber_dir_name)
+        subprocess.run(rm_cmd, shell=True)
 
-    # extraction process
-    extract_charmm_files(charmmFile, charmm_dir)
+    # extracting files
+    print("Extracting data")
+    charmm_file = decompress_charmmfile(args.input, charmm_dir_name)
 
-    # making the directories
-    print('MESSAGE: Creating folders...')
-    os.chdir(charmm_dir)
-    os.chdir('amber')
-    print('MESSAGE: obtaining files for MD simulations...')
-
-    # selecting the correct pdb file depending on which force field was selected
-    if type == "membrane":
-        if os.path.exists('step5_charmm2amber.complete.pdb'):
-            print('DETECTED: CHARMM-GUI output contains the AMBER force field')
-            getFilesCmd = "cp step5_charmm2amber.complete.pdb step5_charmm2amber.rst7 step5_charmm2amber.parm7 {}".format(wdir)
-            subprocess.run(getFilesCmd.split(), shell=True)
-        else:
-            print('DETECTED: CHARMM-GUI output contains the CHARMM force field')
-            getFilesCmd = "cp step5_input.pdb step5_input.rst7 step5_input.parm7 {}".format(wdir)
-            subprocess.run(getFilesCmd.split(), shell=True)
-    
-    # TODO: add support for solvated models 
-    elif modle_type == "solvate":
-    #------------------------------ 
-    # extra block code for solvate
-    #------------------------------ 
-    subprocess.run(getFilesCmd, shell=True)
-    os.chdir(wdir)
-    os.mkdir(amber_dir)
-
-    reNameCmd = f"mv step5*pdb {sysname}_md.pdb ; mv  step5*parm7 {sysname}_md.prmtop ; mv step5*rst7 {sysname}_md.inpcrd"
-    subprocess.run(reNameCmd, shell=True)
-
-    # applying residue check feature
-    syspdb = f'{sysname}_md.pdb'
-    res_check = residueCheck(syspdb)  # returns {int} --> number of resudes of system
-    if sysres is None or sysres == res_check:  # default is set to none in order to use res_check value
-        amber_cmd = f' amber_run_setup.pl -s {sysname} -r {res_check}'
+    # extrat files from charmm_gui file
+    extract_and_format(charmm_dir_name, args.sysname, amber_dir_name)
+    # going to the amber directory and prepair for simulations
+    os.chdir(amber_dir_name)
+    res_check = res_count(pdb_file)  # returns {int} --> number of resudes of system
+    if args.sysres is None or args.sysres == res_check:  # default is set to none in order to use res_check value
+        print("Preparing inputs files for AMBER simulation")
+        amber_cmd = 'amber_run_setup.pl -s {} -r {}'.format(args.sysname, res_check).split()
         subprocess.run(amber_cmd, shell=True)
-        mv_all = f'mv {sysname}_md.pdb {sysname}_md.inpcrd {sysname}_md.prmtop {sysname}*.in {sysname}*.pbs {sysname}*.bash  {charmm_dir} {amber_dir}'
-        subprocess.run(mv_all, shell=True)
-        print("MESSAGE: Charmm2amber is complete!")
 
-    ############################
-    # User respnonses start here
-    ############################
-    elif res_check != sysres:  # use elif res_check == rescheck is false --> use int
-        print('MESSAGE: Resiude check: FAILED',
-        '\nWARNING: The amount of residues specified does not match with the total amount of CA atoms obtained from the pdb file.',
-        f'\n\nThis is the correct amount: {res_check}')
+        clean_up(wdir, comp_file, amber_dir_name, charmm_dir_name)
+
+        print("Charmm2amber is complete!")
+
+    elif res_check != args.sysres:  # use elif res_check == rescheck is false --> use int
+        print('MESSAGE: Resiude check: FAILED')
+        print('WARNING: The amount of residues specified does not match with the total amount of CA atoms obtained from the pdb file.')
+        print('This is the correct amount: {}'.format(res_check))
 
         # user reponse to custome resiude count
         response_count = 0
         while True:
-            usr_res_response = input(f'\nDo you still wish to use {sysres} as your residue count? (Y/n): ')
+            usr_res_response = input('\nDo you still wish to use {} as your residue count? (Y/n): '.format(args.sysres))
 
             # If the response is yes, amber files will be generated
             if usr_res_response.lower() == 'yes' or usr_res_response.lower() == 'y':
-                print(f'MESSAGE: Using {sysres} reisudes count to build your simulation ...')
-                amber_cmd = f' amber_run_setup.pl -s {sysname} -r {sysres}'
+                print('MESSAGE: Using {} reisudes count to build your simulation ...'.format(res_check))
+                amber_cmd = ' amber_run_setup.pl -s {} -r {}'.format(args.sysname, res_check)
                 subprocess.run(amber_cmd, shell=True)
-                mv_all = f'mv {sysname}_md.pdb {sysname}_md.inpcrd {sysname}_md.prmtop {sysname}*.in {sysname}*.pbs {sysname}*.bash  {charmm_dir} {amber_dir}'
-                subprocess.run(mv_all, shell=True)
+
+                clean_up(wdir, comp_file, amber_dir_name, charmm_dir_name)
+
                 print("Charmm2amber is complete!")
                 exit()
 
@@ -131,7 +283,7 @@ def getSystem(charmmFile, sysname, sysres, overwrite, type="membrane"):
                     # attempts checker
                     if default_attempts == 3:
                         print('too many failed attempts. Exiting program')
-                        reset(wdir, sysname)
+                        reset(wdir, args.sysname)
                         exit()
 
                     # asking the user if the they want to use the default residue count
@@ -139,11 +291,10 @@ def getSystem(charmmFile, sysname, sysres, overwrite, type="membrane"):
 
                     # if the response is yes, create the amber files
                     if default_response.lower() == 'y' or default_response.lower() == 'yes':
-                        print(f'Using {res_check} residues to buld your simulation files')
-                        amber_cmd = f' amber_run_setup.pl -s {sysname} -r {res_check}'
+                        print('Using {} residues to buld your simulation files'.format(res_check))
+                        amber_cmd = ' amber_run_setup.pl -s {} -r {}'.format(args.sysname, res_check)
                         subprocess.run(amber_cmd, shell=True)
-                        mv_all = f'mv {sysname}_md.pdb {sysname}_md.inpcrd {sysname}_md.prmtop {sysname}*.in {sysname}*.pbs {sysname}*.bash  {charmm_dir} {amber_dir}'
-                        subprocess.run(mv_all, shell=True)
+                        clean_up(wdir, comp_file, amber_dir_name, charmm_dir_name)
                         print("Charmm2amber is complete!")
                         exit()
 
@@ -154,64 +305,35 @@ def getSystem(charmmFile, sysname, sysres, overwrite, type="membrane"):
                             try:
                                 # attempt checker
                                 if new_count_attempts == 3:
-                                    print('MESSAGE: Too many failed attempts. Exiting program.')
-                                    reset(wdir, sysname)
+                                    print('Too many failed attempts. Exiting program.')
+                                    reset(wdir, args.sysname)
                                     exit()
 
                                 # user inputs new res count. Does not save value if the new value is bigger than res_check's
                                 new_count = int(input('Please enter your new reisude count: '))
                                 if new_count > res_check:
-                                    print(f'WARNNING: The number of resiudes provided exceeds the total amount of reisudes that your system has! \nYour system has {res_check} residues!')
+                                    print('WARNNING: The number of resiudes provided exceeds the total amount of reisudes that your system has! \nYour system has {} residues!'.format(res_check))
 
                                 else:
-                                    print(f'using {new_count} resiudues to build your simulation files.')
-                                    amber_cmd = f' amber_run_setup.pl -s {sysname} -r {new_count}'
-                                    subprocess.run(amber_cmd, shell=True)
-                                    mv_all = f'mv {sysname}_md.pdb {sysname}_md.inpcrd {sysname}_md.prmtop {sysname}*.in {sysname}*.pbs {sysname}*.bash  {charmm_dir} {amber_dir}'
-                                    subprocess.run(mv_all, shell=True)
+                                    print('using {} resiudues to build your simulation files.'.format(new_count))
+                                    amber_cmd = 'amber_run_setup.pl -s {} -r {}'.format(args.sysname, new_count).split()
+                                    subprocess.run(amber_cmd)
+                                    clean_up(wdir, comp_file, amber_dir_name, charmm_dir_name)
                                     print("Charmm2amber is complete!")
                                     exit()
 
                             except ValueError:
                                 print('ERROR: The input you have provided is not an integer. Please enter an integer.')
                                 new_count_attempts += 1
-
                     else:
                         print('MESSAGE: Please enter a valid response')
                         default_attempts += 1
 
-                attempts = 0
-                while True:
-
-                    # 3 fail attempts causes the program to reset and exit
-                    if attempts == 3:
-                        print('MESSAGE: Too many failed attempts. Exiting program.')
-                        reset(wdir, sysname)
-                        exit()
-
-                    try:
-                        new_res_count = int(input('Please enter your new reisude count: '))
-
-                        if new_res_count > res_check:
-                            print(f'WARNING: The value entered {new_res_count} is larger that the system: {res_check}',
-                                  '\nPlease enter an appropiate value.')
-
-                        print(f'MESSAGE: Using {new_res_count} reisudes count to build your simulation ...')
-                        amber_cmd = f' amber_run_setup.pl -s {sysname} -r {new_res_count}'
-                        subprocess.run(amber_cmd, shel=True)            
-                        mv_all = f'mv {sysname}_md.pdb {sysname}_md.inpcrd {sysname}_md.prmtop {sysname}*.in {sysname}*.pbs {sysname}*.bash  {charmm_dir} {amber_dir}'
-                        subprocess.run(mv_all, shell=True)
-                        print("Charmm2amber is complete!")
-                        exit()
-
-                    except ValueError:
-                        print('MESSAGE: The input you have provided is not an integer. Please enter an integer.')
-                        attempts += 1
 
             # 3 fail attempts causes the program to reset and exit
             elif response_count == 3:
                 print('MESSAGE: Too many failed attempts. Exiting program.')
-                reset(wdir, sysname)
+                reset(wdir, args.sysname)
                 exit()
 
             else:
@@ -220,129 +342,3 @@ def getSystem(charmmFile, sysname, sysres, overwrite, type="membrane"):
     else:
         print('Uh oh something went wrong!')
         exit()
-
-
-def residueCheck(pdbfile: str):
-    """
-    action:
-    checks if number of residues provided == the total of CA atoms in pdb file.
-
-    input:
-    requires specified number of residues and it's corresponding pdbfile.
-
-    returns:
-    True if user input residue count is equal to the amount of CA atoms
-    present in pdbfile. If False, it returns an interger that pertains to the
-    correct number of residues of the system.
-    """
-    print('MESSAGE: Residue check: Counting residues...')
-    with open(pdbfile, 'r') as f:
-        CA_count = 0
-        for data in f:
-            lines = data.split()
-            if "ATOM" == lines[0] and "CA" == lines[2]:
-                CA_count = CA_count + 1
-
-        return CA_count
-
-
-def reset(working_dir: str, sys_name: str):
-    """
-    [Summary]:
-        - removes the created folders and files during the program if an error occurs.
-
-    [input]
-        - wdir {string} => working directory where the charmm2amber was executed
-
-    """
-    # get all the files fom the current working directory
-    print('MESSAGE: Resetting current process...')
-    os.chdir(working_dir)
-    rm_files = glob.glob(f'{sys_name}_md.pdb') + glob.glob(f'{sys_name}_md.inpcrd') + glob.glob(f'{sys_name}_md.rst7') + glob.glob(f'{sys_name}_md.parm7') + glob.glob(f'{sys_name}_md.prmtop') 
-
-    # obtaining raw files from
-    unamed_files = glob.glob('step5_charmm2amber*pdb') + glob.glob('step5_charmm2amber*inpcrd') + glob.glob('step5_charmm2amber*rst7') + glob.glob('step5_charmm2amber*prmtop') + glob.glob('step5_charmm2amber*parm7')
-
-    labled_dirs = glob.glob(f'{sys_name}_CHARMM-GUI') + glob.glob(f'{sys_name}_AMBER')
-    
-    all_files = rm_files + unamed_files + labled_dirs
-    # iterate the files and check with
-    for files in all_files:
-        subprocess.run(f'rm -rf {files}', shell=True)
-
-
-def help_message():
-    print(textwrap.dedent("""
-    ###########################
-    Charmm2amber Version: {}
-    ###########################
-    
-    [ Summary ]
-    Charrm2amber is a program that allows the users to create on the fly MD simulation read files.
-    The program only requires the compressed files (.tar or .tgz) obtained from CHARMM-GUI and also
-    provide a name for the system your are creating.
-
-
-    [ Use case Example ]
-    python charmm2amber.py -i chamm_gui.tgz -s a2a_5g53_active
-
-    Display the help menu (3 ways):
-    python charmm2amber.py
-    python charmm2amber.py -h
-    python charmm2amber.py --help
-
-    [ Help menu ]
-    -h, --help          Displays the help message when it appears
-    
-    -v, --version       Displays the current version installed 
-
-    [ Required Arguments ]
-    -i, --input         The compressed files (.tgz or .tar) obtained from CHARMM-GUI
-
-    -s, --sysname       The name of the system that will used in creating the simulation
-                        files
-
-
-    [ Optional Arguments ]
-    -t,  --type         Type of model that was produces in CHARMM-GUI. [Default: membrane]
-                        [Choices: membrane, solvated]
-
-    -r,  --sysres       The selected range of resid that you want to use for your simulation
-                        [default: None]
-
-    -o, --overwrite     Overwrite existing CHARMM-GUI and AMBER
-                          """.format(__version__)))
-    sys.exit()
-
-if __name__ in '__main__':
-
-    # Displaying help message if no arguments or "-h" "--help" were passed
-    if len(sys.argv) == 1:
-        help_message()
-
-    elif sys.argv[1] == '--help' or sys.argv[1] == '-h':
-        help_message()
-        
-    elif sys.argv[1] == '--version' or sys.argv[1] == '-v':
-        print('charmm2amber {}'.format(__version__))
-        sys.exit()
-
-    # creating CLI optional arguments
-    parser = argparse.ArgumentParser(add_help=False)
-    required = parser.add_argument_group('required arguments')
-    optional = parser.add_argument_group('optional arguments ')
-
-    required.add_argument('-i', '--input', type=str, required=True,
-                            help="CHARMM-GUI .tgz/.tar output file")
-    required.add_argument('-s', '--sysname', type=str, required=True,
-                            help="Name of the system")
-    optional.add_argument('-r', '--sysres', type=int, nargs='?', required=False, default=None,
-                            help='Total number of residues of the system' )
-    optional.add_argument('-o', '--overwrite', default=False, action='store_true', required=False,
-                              help='Ignores the "FileExistsError" when using the same system name')
-    optional.add_argument('-t', '--tpye', type=str,default="membrane", choices=["membrane", "solvated"],
-                          required=False, help="Type of model that was created in CHARMM-gui") 
-    args = parser.parse_args()
-
-    # executing program
-    getSystem(args.input, args.sysname, args.sysres, args.overwrite)
