@@ -1,27 +1,30 @@
 #!/home/exec/anaconda3/bin/python
-import os 
-import sys 
+import os
+import sys
 import shutil
 import subprocess
 import argparse
 from textwrap import dedent
+import mdtraj as md
 
-# TODO: test multi index
-# TODO: test range index
 __version__ = "0.1.0"
 
 # formats user inputs for better input handling in the program
 class FrameSelectionArgumentFormatter(argparse.Action):
     """ modifies input format to allow easy index selection """
     def __call__(self, parser, namespace, values, options_string=None):
-        if len(values) == 1:
-            setattr(namespace, self.dest, values[0])
-        elif "-" in values:
+        if "-" in " ".join(values):
             # frames within a range
-            start, end = tuple(values.split("-"))
-            indicies = [i for i in range(start, end)]
+            stringed_range = " ".join(values)
+            start, end = tuple(stringed_range.split("-"))
+            indicies = [i for i in range(int(start), int(end))]
             setattr(namespace, self.dest, indicies)
-            raise NotImplementedError("Range selection has not been tested yet")
+            # raise NotImplementedError("Range selection has not been tested yet")
+        elif len(values) == 1:
+            setattr(namespace, self.dest, int(values[0]))
+        elif len(values) > 1:
+            vals = [int(i) for i in values]
+            setattr(namespace, self.dest, vals)
         else:
             raise ValueError("unrecognized index input format")
 
@@ -31,10 +34,12 @@ def cpptraj_executer(trajpath, toppath, frame, outname=None):
 
     with open("temp_cpptraj.in", "w") as cpptrajfile:
         if outname == None:
-            outname = "restart_".format(frame)
+            outname = "restart_frame{}.rst".format(frame)
+        else:
+            outname = "{}_frame{}.rst".format(outname, frame)
         cpptrajfile.write("parm {}\n".format(toppath))
         cpptrajfile.write("trajin {0} {1} {1}\n".format(trajpath, frame+1))
-        cpptrajfile.write("trajout {}_frame{}.rst restart\n".format(outname, frame))
+        cpptrajfile.write("trajout {} restart\n".format(outname))
         cpptrajfile.write("go\n")
         cpptrajfile.write("quit")
 
@@ -46,8 +51,8 @@ def cpptraj_executer(trajpath, toppath, frame, outname=None):
     print(".rst file created in: {}".format(os.path.realpath(outname)))
     os.remove("temp_cpptraj.in")
 
-# checking mechanisms 
-def check_files(trajpath, toppath):
+# checking mechanisms
+def check_input_params(trajpath, toppath, selected_frames):
     """ checks if the inputed trajectory exists """
     traj_check = os.path.exists(trajpath)
     prmtop_check = os.path.exists(toppath)
@@ -55,23 +60,34 @@ def check_files(trajpath, toppath):
         raise FileNotFoundError("Cannot not locate trajectory")
     if not prmtop_check:
         raise FileNotFoundError("Cannot not locate topology file")
-    
+
+    # checking if selected frame index is not out of bounds
+    topology = md.load_topology(toppath)
+    trajObj_nframes = md.load(trajpath, top=topology).n_frames
+    print("Trajectory contains {} frames".format(trajObj_nframes))
+    if not isinstance(selected_frames, list):
+        selected_frames = [selected_frames]
+    index_check = all(frame_idx < trajObj_nframes for frame_idx in selected_frames)
+    if index_check is False:
+        out_of_bounds_indx = " ".join([str(out_idx) for out_idx in selected_frames if out_idx > trajObj_nframes])
+        raise IndexError("Given frame index or indices {} excceds total number of frames of given trajectory: {} frames".format(out_of_bounds_indx, trajObj_nframes))
+
 
 def help_message():
-    print(dedent(""" 
+    print(dedent("""
     create_rst.py
     version: {}
     Creates restart files by utlizing cpptraj's functions.
 
     USECASE EXAMPLE:
     ---------------
-    create_rst.py -i traj.nc -t top.prmtop -x 43 -o new_start_point          # single frame 
+    create_rst.py -i traj.nc -t top.prmtop -x 43 -o new_start_point          # single frame
     create_rst.py -i traj.nc -t top.prmtop -x 50-100 -o new_start_point      # frames by range
     create_rst.py -i traj.nc -t top.prmtop -x 40 32 21 43 -o new_start_point # multi independent frames
-    
+
     ARGUMENTS
     ---------
-    -i, --input           Trajectory file 
+    -i, --input           Trajectory file
     -t, --topology        Topology file (.prmtop)
     -x, --indexselection  Index selection by range or independent selection
     -o, --output          name of the output rst files [Default: None]
@@ -87,30 +103,29 @@ if __name__ == "__main__":
     elif sys.argv[1] == "-h" or sys.argv[1].lower() == "--help":
         help_message()
 
-    # CLI arguments 
+    # CLI arguments
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("-i", "--input", required=True, help="trajectoy paths")
     parser.add_argument("-t", "--topology", type=str, required=True, help="Topology file. Example: File.prmtop")
-    parser.add_argument("-x", "--indexselection", nargs="+", type=int, required=True, action=FrameSelectionArgumentFormatter)
+    parser.add_argument("-x", "--indexselection", nargs="+", type=str, required=True, action=FrameSelectionArgumentFormatter)
     parser.add_argument("-o", "--outname", type=str, required=False, default=None)
     args = parser.parse_args()
 
-    # check mechanisms 
-    # -- checking if cpptraj exists 
+    # check mechanisms
+    # -- checking if cpptraj exists
     cpptraj_check = shutil.which("cpptraj")
     if cpptraj_check is None:
         raise ValueError("Cannot find cpptraj executable")
 
     # -- checking if the input files exists (traj and prmtop files)
-    check_files(args.input, args.topology)
+    check_input_params(args.input, args.topology, args.indexselection)
 
     if isinstance(args.indexselection, list):
         # only when a range is provided
-        start, end = tuple(args.indexselection)
-        for frame_idx in range(start, end):
+        for frame_idx in args.indexselection:
             cpptraj_executer(args.input, args.topology, frame_idx, args.outname)
     else:
-        # only for single value 
+        # only for single value
         cpptraj_executer(args.input, args.topology, args.indexselection, args.outname)
 
     print("Process Finished!")
