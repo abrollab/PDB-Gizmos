@@ -5,6 +5,8 @@ import shutil
 import subprocess
 import argparse
 from textwrap import dedent
+from datetime import datetime
+
 import mdtraj as md
 
 __version__ = "0.1.0"
@@ -34,7 +36,7 @@ def cpptraj_executer(trajpath, toppath, frame, outname=None):
 
     with open("temp_cpptraj.in", "w") as cpptrajfile:
         if outname == None:
-            outname = "restart_frame{}.rst".format(frame)
+            outname = "restart_frame{}-{}.rst".format(frame, datetime.datetime.now().strftime("%m%d%y-%H%M%S"))
         else:
             outname = "{}_frame{}.rst".format(outname, frame)
         cpptrajfile.write("parm {}\n".format(toppath))

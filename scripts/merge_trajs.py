@@ -37,7 +37,7 @@ def save_traj(trajobj, outname=None, traj_format="nc"):
 
     # using default naming if output name is not provided
     if outname is None:
-        outname = "merged_trajectory-{}".format(datetime.strftime("%m%d%y-%H%M%S"))
+        outname = "merged_trajectory-{}".format(datetime.now().strftime("%m%d%y-%H%M%S"))
 
     supported_formats = ["xtc", "nc"]
 
