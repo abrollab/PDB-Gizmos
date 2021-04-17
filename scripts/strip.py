@@ -8,7 +8,7 @@ from datetime import datetime
 from textwrap import dedent
 
 # version
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 
 class CheckResRangeFormat(argparse.Action):
@@ -24,13 +24,18 @@ class CheckResRangeFormat(argparse.Action):
 def cpptraj_executer(trajpaths, top_file, resrange, outname=None):
     """ writes input file and executes cpptraj """
     with open("temp_cpptraj.in", "w") as cpptraj_infile:
-        cpptraj_infile.write("parm {}\n".format(top_file))
 
-        # adding trajectories
+        # setting up output name
         if outname is None:
             outname = "strip_traj-{}".format(datetime.now().strftime("%m%d%y-%H%M%S"))
             print("WARNING: Output name not provided!\nSetting default name: {}.nc".format(outname))
+        else:
+            outname = outname.split(".")[0] # removes the extension since it is already interanlly applied
 
+        # adding topology file
+        cpptraj_infile.write("parm {}\n".format(top_file))
+
+        # adding trajectories
         for traj_path in trajpaths:
             cpptraj_infile.write("trajin {}\n".format(traj_path))
 
@@ -41,7 +46,8 @@ def cpptraj_executer(trajpaths, top_file, resrange, outname=None):
         # output
         cpptraj_infile.write("trajout {}.nc\n".format(outname))
         cpptraj_infile.write("go")
-
+    
+    # execute process
     cpptraj_cmd = "cpptraj -i temp_cpptraj.in".split()
     cpptraj_proc = subprocess.run(cpptraj_cmd, shell=False, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     if cpptraj_proc.returncode != 0:
@@ -59,13 +65,13 @@ def help_message():
 
     USECASE EXAMPLE:
     ---------------
-    strip.py -i traj.nc -t top.prmtop -x 50-100 -o strp_traj
+    strip.py -x traj.nc -p top.prmtop -r 50-100 -o strp_traj
 
     ARGUMENTS
     ---------
     Required:
-    -i, --input           Trajectory file(s)
-    -t, --topology        Topology file (.prmtop)
+    -x, --trajs           Trajectory file(s)
+    -p, --topology        Topology file (.prmtop)
     -r, --resrange        Selection of resiudes kept after stripping 
 
     Optional:

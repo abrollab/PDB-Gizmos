@@ -1,22 +1,22 @@
 #!/home/exec/anaconda3/bin/python
 import os
 import sys
-import argparse
+import argparse 
 from datetime import datetime
 from textwrap import dedent
 
 import mdtraj as md
 
-# version
+# version 
 __version__ = "0.1.0"
 
 
 def traj_merger(traj_paths, top_path, stride=1):
-    """ Takes the list of trajectory file paths and merges them into one
-    trajectory object
+    """ Takes the list of trajectory file paths and merges them into one 
+    trajectory object 
     returns:
     -------
-        - md.Trajectory Object
+        - md.Trajectory Object 
     """
     os.environ["OMP_NUM_THREADS"] = "4"
     top = md.load_topology(top_path)
@@ -26,7 +26,7 @@ def traj_merger(traj_paths, top_path, stride=1):
         trajobj = md.load(traj_path, top=top, stride=stride)
         print("Loaded: {} with {} frames".format(traj_path, trajobj.n_frames))
         list_of_trajobjs.append(trajobj)
-
+        
     print("Merging all trajectories")
     merged_traj = md.join(list_of_trajobjs)
     return merged_traj
@@ -37,8 +37,8 @@ def save_traj(trajobj, outname=None, traj_format="nc"):
 
     # using default naming if output name is not provided
     if outname is None:
-        outname = "merged_trajectory-{}".format(datetime.now().strftime("%m%d%y-%H%M%S"))
-
+        outname = "merged_trajectory-{}".format(datetime.strftime("%m%d%y-%H%M%S"))
+    
     supported_formats = ["xtc", "nc"]
 
     print("Saving as '.{}' format".format(traj_format))
@@ -55,66 +55,66 @@ def save_traj(trajobj, outname=None, traj_format="nc"):
 
 def help_message():
     """ Display program help message """
-    print(dedent("""
+    print(dedent(""" 
     merge_trajs.py
     version: {}
-    Script that takes in multiple trajectories and merges them into one
+    Script that takes in multi trajectories and merges them into one
 
     USECASE EXAMPLE:
     ---------------
-    merge_trajs.py -i traj1.nc traj2.nc -t top.prmtop -s 10 -f nc -o merged_5nx2_100ns
-    merge_trajs.py -i traj1.nc traj2.nc -t top.prmtop -s 10 -f xtc -o merged_5nx2_100ns
-    merge_trajs.py -i traj1.nc traj2.nc -t top.prmtop -s 10 -f nc -o merged_5nx2_100ns --removetrajs
-
+    merge_trajs.py -x traj1.nc traj2.nc -p top.prmtop -s 10 -of nc -o merged_5nx2_100ns
+    merge_trajs.py -x traj1.nc traj2.nc -p top.prmtop -s 10 -of xtc -o merged_5nx2_100ns
+    merge_trajs.py -x traj1.nc traj2.nc -p top.prmtop -s 10 -of nc -o merged_5nx2_100ns --removetrajs
+    
     ARGUMENTS
     ---------
     Required:
-    -i, --input    Trajectory file path
-    -t, --topology Topology file (.prmtop)
-
-    Optional:
+    -x, --trajs    Trajectory file path
+    -p, --topology Topology file (.prmtop)
+    
+    Optional
     -s, --stride   loading trajectories with given stride [Default: 1]
-    -o, --output   Name of the output trajectory file [Default: None]
-    -f, --format   Output trajectory format [Default: "nc"] [Options: "nc", "xtc"]
+    -o, --output   Name of the output trajectory file [Default: None] 
+    -of, --format   Output trajectory format [Default: "nc"] [Options: "nc", "xtc"]
 
     FLAGS (optional)
     -----
-    --removetrajs  Deletes provided trajectories from disk after being merged.
+    --removetrajs  Deletes provided trajectories from disk after being merged. 
                    [Default: False]
     """).format(__version__))
     exit()
 
 if __name__ == "__main__":
 
-    # Help message
+    # Help message 
     if len(sys.argv) == 1:
         help_message()
     elif sys.argv[1] == "-h" or sys.argv[1].lower() == "--help":
         help_message()
 
-    # CLI arguments
+    # CLI arguments 
     parser = argparse.ArgumentParser(add_help=False)
     required = parser.add_argument_group("Required Arguments")
     optional = parser.add_argument_group("Optional Arguments")
-    required.add_argument("-i", "--input", nargs="+", required=True)
-    required.add_argument("-t", "--topology", type=str, required=True)
+    required.add_argument("-x", "--trajs", nargs="+", required=True)
+    required.add_argument("-p", "--topology", type=str, required=True)
     optional.add_argument("-s", "--stride", type=int, required=False, default=1)
     optional.add_argument("-o", "--outname", type=str, required=False, default=None)
-    optional.add_argument("-f", "--format", type=str, required=False, default="nc")
+    optional.add_argument("-of", "--format", type=str, required=False, default="nc")
     optional.add_argument("--removetrajs", action="store_true", required=False, default=False)
     args = parser.parse_args()
 
-    # main code
-    # -- load trajectories and merge them
+    # main code 
+    # -- load trajectories and merge them 
     merged_trajobj = traj_merger(args.input, args.topology, stride=args.stride)
 
-    # -- saving merged trajectory into disk
+    # -- saving merged trajectory into disk 
     save_traj(merged_trajobj, outname=args.outname, traj_format=args.format)
 
     # -- Checking if `removetrajs` flag is true
     if args.removetrajs:
         print("WARNING: Deleting provided trajectories from disk requires user response")
-
+        
         # User response section
         attempts = 0
         while True:

@@ -8,7 +8,7 @@ from datetime import datetime
 from textwrap import dedent
 
 # version
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 
 class CheckResRangeFormat(argparse.Action):
@@ -17,7 +17,7 @@ class CheckResRangeFormat(argparse.Action):
         range_check = values.split()
         if len(range_check) != 3 and len(range_check) != 1:
             raise ValueError("Incorrect format or invalid argument values provided: Example argumet input: '-r 100-300'")
-
+        
         selected_range = "".join(values.split())
         setattr(namespace, self.dest, selected_range)
 
@@ -28,7 +28,7 @@ def cpptraj_executer(trajpaths, top_file, resrange=None, outname=None):
 
         # adding trajectories
         if outname is None:
-            outname = "ai_traj-{}".format(datetime.now().strftime("%m%d%y-%H%M%S"))
+            outname = "ai_traj-{}".format(datetime.strftime("%m%d%y-%H%M%S"))
         for traj_path in trajpaths:
             cpptraj_infile.write("trajin {}\n".format(traj_path))
 
@@ -61,13 +61,13 @@ def help_message():
 
     USECASE EXAMPLE:
     ---------------
-    autoimage.py -i traj.nc -t top.prmtop -x 50-100 -o new_start_point
+    autoimage.py -x traj.nc -p top.prmtop -r 50-100 -o new_start_point
 
     ARGUMENTS
     ---------
     Required:
-    -i, --input           Trajectory file(s)
-    -t, --topology        Topology file (.prmtop)
+    -x, --trajs           Trajectory file(s)
+    -p, --topology        Topology file (.prmtop)
 
     Optional:
     -r, --resrange        Index selection by range [Default: None]
@@ -94,12 +94,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(add_help=False)
     required = parser.add_argument_group("Required Arguments")
     optional = parser.add_argument_group("Optional Arguments")
-    required.add_argument("-i", "--input", nargs="+", required=True)
-    required.add_argument("-t", "--topology", type=str, required=True)
+    required.add_argument("-x", "--trajs", nargs="+", required=True)
+    required.add_argument("-p", "--topology", type=str, required=True)
     optional.add_argument("-r", "--resrange", type=str, action=CheckResRangeFormat, required=False, default=None)
     optional.add_argument("-o", "--output", type=str, required=False, default=None)
     args = parser.parse_args()
 
     # main code
     # -- creating cpptraj inputfile and executing cpptraj
-    cpptraj_executer(args.input, args.topology, resrange=args.resrange, outname=args.output)
+    cpptraj_executer(args.trajs, args.topology, resrange=args.resrange, outname=args.output)
