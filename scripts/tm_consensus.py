@@ -45,7 +45,7 @@ def parse_pdbtm_xml(pdbtm_xml):
     return labled_tms
 
 
-def get_consensus(array_of_labled_tms):
+def get_consensus(array_of_labled_tms, offset):
     """ takes in an array of labled tms and find the consensus tm range """
 
     # Prepairing data
@@ -89,7 +89,7 @@ def get_consensus(array_of_labled_tms):
             # -- for now an error will rise, later a function will take care of it
             # TODO: create "remove_outlier()" function
             raise ValueError("Outlier has been found in the data. Removing remove_outlier() method under development")
-        consensus_tmrange = overlapping_resids[0], overlapping_resids[-1]
+        consensus_tmrange = int(overlapping_resids[0]) + offset, int(overlapping_resids[-1]) + offset
         consensus_range_per_tm[tm] = consensus_tmrange
     return consensus_range_per_tm
 
@@ -108,6 +108,11 @@ def help_message():
     ARGUMENTS:
     ----------
     -i, --input      pdb id(s)
+
+    OPTIONAL:
+    ----------
+    --offset         Shifting the consensus resid range. Values 
+                     can be postive or negative. [Default: 0]
                      """.format(__version__))
 
 if __name__ == "__main__":
@@ -119,6 +124,7 @@ if __name__ == "__main__":
     # CLI
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", nargs="+", required=True)
+    parser.add_argument("--offset", type=int, required=False, default=0)
     args = parser.parse_args()
 
     labled_tms_allpdbs = defaultdict(None) # data
@@ -127,8 +133,10 @@ if __name__ == "__main__":
         tm_ranges = parse_pdbtm_xml(contents)
         labled_tms_allpdbs[pdbid] = tm_ranges
 
-    consensus = get_consensus(labled_tms_allpdbs)
+    consensus = get_consensus(labled_tms_allpdbs, args.offset)
     print("Here are the results")
+    x = [tm_range for tm, tm_range in consensus.items()]
+    print(x)
     for tm, tm_range in consensus.items():
         beg, end = tm_range
         print("{}: {} to {}".format(tm, beg, end))
