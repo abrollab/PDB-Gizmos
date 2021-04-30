@@ -8,7 +8,7 @@ from time import sleep
 from collections import defaultdict
 from bs4 import BeautifulSoup
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 # External requests
 def get_pdbtm_xml(pdbid, buffer=1):
@@ -114,6 +114,9 @@ def help_message():
     --offset         Shifting the consensus resid range. Values 
                      can be postive or negative. [Default: 0]
                      """.format(__version__))
+    
+    print(message)
+    exit()
 
 if __name__ == "__main__":
  # Help message
