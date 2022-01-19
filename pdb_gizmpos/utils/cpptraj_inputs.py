@@ -7,11 +7,11 @@ class CpptrajWrapper:
 
     def __init__(self, name, topology, traj, stride=1):
         self.name = open(name, "w")
-        self.topology = topolog
+        self.topology = topology
         self.traj = traj
 
 
-    def preprocess(self, autoimg_idx=(), strip_idx()):
+    def preprocess(self, autoimg_idx=(), strip_idx=()):
         """ Creates default paramters for autoimaging and striping """
 
         # checking inputs
@@ -29,17 +29,17 @@ class CpptrajWrapper:
         self.topology.write("parm {}".format(self.topology))
         self.topology.write("trajin {}".format(self.traj))
         self.topology.write("autoimage")
-        self.topology.write("strip !:{}-{} outprefix strip".format(strip_idx[0], strip_idx[1])))
+        self.topology.write("strip !:{}-{} outprefix strip".format(strip_idx[0], strip_idx[1]))
         self.topology.write("trajout strp_{}".format(self.traj))
         self.topology.write("run")
 
     def add_custom_params(self, paramters):
         """ Create your own cpptraj.in file """
         self.name.write(paramters)
-    
+
     def describe(self):
         """ prints out what is currently written in the file """
         pass
 
 
-    
+

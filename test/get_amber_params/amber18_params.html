@@ -1,0 +1,283 @@
+<tbody>
+    <tr role="row" class="odd">
+        <td class="sorting_1">barostat</td>
+        <td>Specifies the barostat for pressure control. <br> <code
+                class="language-plaintext highlighter-rouge">= 1</code>: Berendsen [Default] <br> <code
+                class="language-plaintext highlighter-rouge">= 2</code>: Monte Carlo</td>
+        <td>328</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">cut</td>
+        <td>Specifies the nonbonded cutoff (in Å). Any value can be specified. <br> <code
+                class="language-plaintext highlighter-rouge">= 9999.0</code>: Effectively an infinite cutoff. [Default
+            when <code class="language-plaintext highlighter-rouge">igb &gt; 0</code>] <br> <code
+                class="language-plaintext highlighter-rouge">= 8.0</code>: A “good value.” [Default when <code
+                class="language-plaintext highlighter-rouge">igb == 0</code>]</td>
+        <td>338</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">dt</td>
+        <td>Specifies the time step in picoseconds. <br> <code
+                class="language-plaintext highlighter-rouge">= 0.001</code>: Recommended maximum for runs without SHAKE
+            (equivalent to 1 fs). [Default] <br> <code class="language-plaintext highlighter-rouge">= 0.002</code>:
+            Recommended maximum for runs with SHAKE (equivalent to 2 fs).</td>
+        <td>325</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">gamma_ln</td>
+        <td>Specifies the collision frequency, γ, in ps<sup>-1</sup> when using <code
+                class="language-plaintext highlighter-rouge">ntt = 3</code>. Also specifies constants when <code
+                class="language-plaintext highlighter-rouge">ntt = 9</code> and <code
+                class="language-plaintext highlighter-rouge">ntt = 10</code> <br> <code
+                class="language-plaintext highlighter-rouge">= 0</code>: [Default]</td>
+        <td>326</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">ibelly</td>
+        <td>Specifies belly type dynamics. <br> <code class="language-plaintext highlighter-rouge">= 1</code>: Some
+            atoms in the system are allowed to move, and the rest will be frozen. The moving atoms are specified through
+            <code class="language-plaintext highlighter-rouge">bellymask</code>. <br> Note: <code>ibelly ≠ 0</code> is
+            not supported by GPUs.</td>
+        <td>323</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">ig</td>
+        <td>The random seed. MD starting velocities are dependent on the random number. Setting a specific random seed
+            can be done to check reproducibility. <br> <code class="language-plaintext highlighter-rouge">= -1</code>:
+            Seed is set based off current date and time. [Default]</td>
+        <td>326</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">imin</td>
+        <td>Specifies the minization settings. <code class="language-plaintext highlighter-rouge">= 0</code>: Run MD
+            without minimization [Default] <br> <code class="language-plaintext highlighter-rouge">= 1</code>: Energy
+            minimization <br> <code class="language-plaintext highlighter-rouge">= 5</code>: Read trajectory for
+            analysis</td>
+        <td>321</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">ioutfm</td>
+        <td>Specifies the format for the coordinate and velocity trajectory files. <br> <code
+                class="language-plaintext highlighter-rouge">= 0</code>: Formatted ASCII <br> <code
+                class="language-plaintext highlighter-rouge">= 1</code>: Binary NetCDF [Default]</td>
+        <td>323</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">irest</td>
+        <td>Allows a simulation to be restarted. <br> <code class="language-plaintext highlighter-rouge">= 0</code>: Run
+            a new simulation, not a restart. Velocities ignored, and time step set to 0. [Default] <br> <code
+                class="language-plaintext highlighter-rouge">= 1</code>: Restart simulation, using coordinates and
+            velocities from previously saved restart file. If using this flag, need <code
+                class="language-plaintext highlighter-rouge">ntx &gt; 4</code></td>
+        <td>321</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">iwrap</td>
+        <td>Specifies wrapping coordinates of restart and trajectory files to within the primary box. <br> <code
+                class="language-plaintext highlighter-rouge">= 0</code>: No wrapping. The use of <em>cpptraj</em> will
+            be necessary to translate back to primary box. [Default] <br> <code
+                class="language-plaintext highlighter-rouge">= 1</code>: Wrapping is performed. May be necessary for
+            very long runs if files written to ASCII and not NetCDF.</td>
+        <td>322</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">maxcyc</td>
+        <td>Specifies the maximum number of cycles for minimization. [Default = 1].</td>
+        <td>324</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">ncyc</td>
+        <td>Minimization method will switch from steepest descent to conjugate gradient after this many cycles (when
+            default <code class="language-plaintext highlighter-rouge">ntmin = 1</code>). [Default = 10]</td>
+        <td>324</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">nmropt</td>
+        <td>This specifies whether NMR data will be performed. <br> <code
+                class="language-plaintext highlighter-rouge">= 0</code>: No NMR analysis will be done [Default] <br>
+            <code class="language-plaintext highlighter-rouge">= 1</code>: Gives NMR restraints and weight changes <br>
+            <code class="language-plaintext highlighter-rouge">= 5</code>: Gives NMR restraints, weight changes, NOESY
+            volumes, chemical shifts, and residual dipolar restraints <br> Note: <code
+                class="language-plaintext highlighter-rouge">nmropt &gt; 1</code> is unsupported for runs on GPUs.</td>
+        <td>321</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">nsnb</td>
+        <td>Specifies the frequency of nonbonded list updates when <code
+                class="language-plaintext highlighter-rouge">igb = nbflag = 0</code>. [Default 25]</td>
+        <td>339</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">nstlim</td>
+        <td>Specifies the number of MD steps to run. [Default = 1]</td>
+        <td>324</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">ntb</td>
+        <td>Specifies whether the system is subjected to periodic boundaries. <br> <code
+                class="language-plaintext highlighter-rouge">= 0</code>: No periodicity and PME is off. [Default when
+            <code class="language-plaintext highlighter-rouge">igb &gt; 0</code>] <br> <code
+                class="language-plaintext highlighter-rouge">= 1</code>: Constant volume. [Default when <code
+                class="language-plaintext highlighter-rouge">ntp = igb = 0</code>, which are both their respective
+            defaults] <br> <code class="language-plaintext highlighter-rouge">= 2</code>: Constant pressure. [Default
+            when <code class="language-plaintext highlighter-rouge">ntp &gt; 0</code>]</td>
+        <td>338</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">ntc</td>
+        <td>Specifies whether to perform SHAKE (helps ensure bonds meet proper length constraints, and should be used
+            for MD simulations). When using TIP3P water, use <code
+                class="language-plaintext highlighter-rouge">ntf = ntc = 2</code>. <br> <code
+                class="language-plaintext highlighter-rouge">= 1</code>: No SHAKE [Default] <br> <code
+                class="language-plaintext highlighter-rouge">= 2</code>: Bonds with hydrogen are constrained <br> <code
+                class="language-plaintext highlighter-rouge">= 3</code>: All bonds are constrained (not an option for
+            QM/MM or parallel runs using <em>sander</em>).</td>
+        <td>329</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">ntf</td>
+        <td>Specifies how forces are evaluated. <br> <code class="language-plaintext highlighter-rouge">= 1</code>:
+            calculates complete interactions [Default] <br> <code
+                class="language-plaintext highlighter-rouge">= 2</code>: calculation ignores bond interactions with
+            H-atoms (use with <code class="language-plaintext highlighter-rouge">ntc = 2</code>) <br> <code
+                class="language-plaintext highlighter-rouge">= 3</code>: calculation ignores all bond interactions (use
+            with <code class="language-plaintext highlighter-rouge">ntc = 3</code>) <br> <code
+                class="language-plaintext highlighter-rouge">= 4</code>: calculation ignores all bonds and angles with
+            H-atoms <br> <code class="language-plaintext highlighter-rouge">= 5</code>: calculation ignores all bonds
+            and angle interactions <br> <code class="language-plaintext highlighter-rouge">= 6</code>: calculation
+            ignores dihedrals involving H-atoms and all bonds and angle interactions <br> <code
+                class="language-plaintext highlighter-rouge">= 7</code>: calculation ignores all bond, angle, and
+            dihedral interactions <br> <code class="language-plaintext highlighter-rouge">= 8</code>: calculation
+            ignores all bond, angle, dihedral, and non-bonded interactions</td>
+        <td>338</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">ntp</td>
+        <td>Specifies constant pressure dynamics. <br> <code class="language-plaintext highlighter-rouge">= 0</code>: no
+            pressure scaling performed. [Default] <br> <code class="language-plaintext highlighter-rouge">= 1</code>: MD
+            with isotropic position scaling. <br> <code class="language-plaintext highlighter-rouge">= 2</code>: MD with
+            anisotropic pressure scaling (should only be used with orthogonal boxes, aka “solvateoct”). <br> <code
+                class="language-plaintext highlighter-rouge">= 3</code>: MD with semiisotropic pressure scaling (should
+            only be used with “solvateoct” and <code
+                class="language-plaintext highlighter-rouge">csurften &gt; 0</code>).</td>
+        <td>327</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">ntpr</td>
+        <td>Specifies after how many steps the energy information will be printed to both mdout and mdinfo. [Default =
+            50]</td>
+        <td>322</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">ntr</td>
+        <td>Specifies whether atoms specified through the restraintmask string should be restrained in Cartesian space
+            with a harmonic potential when <code class="language-plaintext highlighter-rouge">ntr = 1</code>. [Default =
+            0]</td>
+        <td>323</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">ntt</td>
+        <td>Specifies temperature scaling. <br> <code class="language-plaintext highlighter-rouge">= 0</code>: Constant
+            total energy, assuming <code class="language-plaintext highlighter-rouge">ntb &lt; 2</code>. Microcanonical
+            NVE. <br> <code class="language-plaintext highlighter-rouge">= 1</code>: Constant temperature, with
+            weak-coupling algorithm. Dangerous for generalized Born simulations. <br> <code
+                class="language-plaintext highlighter-rouge">= 2</code>: Anderson-like temperature, with Newtonian
+            dynamics. Canonical (constant T) ensemble. <br> <code
+                class="language-plaintext highlighter-rouge">= 3</code>: Langevin dynamics with collision frequency
+            specified by <code class="language-plaintext highlighter-rouge">gamma_ln</code>. (If <code
+                class="language-plaintext highlighter-rouge">gamma_ln = 0</code>, same as <code
+                class="language-plaintext highlighter-rouge">ntt = 0</code>). Restarts of these systems should have an
+            explicitly set <code class="language-plaintext highlighter-rouge">ig</code> value. <br> <code
+                class="language-plaintext highlighter-rouge">= 9</code>: Optimized Isokinetic Nose-Hoover (OIN) chain
+            ensemble, aka a fancy constant temperature simulation. <br> <code
+                class="language-plaintext highlighter-rouge">= 10</code>: Stochastic Isokinetic Nose-Hoover RESPA
+            Integrator. Can help demonstrate a Boltzman distribution.</td>
+        <td>325</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">ntwv</td>
+        <td>Specifies how frequently velocities are written to the mdvel file. <br> <code
+                class="language-plaintext highlighter-rouge">= -1</code>: velocities written to mdcrd, in a combined
+            coordinate/velocity trajectory file. Must be used with NetCDF binary outpput (<code
+                class="language-plaintext highlighter-rouge">ioutfm = 1</code>). <br> <code
+                class="language-plaintext highlighter-rouge">= 0</code>: no velocity trajectory file is written.
+            [Default]</td>
+        <td>322</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">ntwx</td>
+        <td>Specifies how frequently coordinates are written to the mdcrd (trajectory) file. If <code
+                class="language-plaintext highlighter-rouge">ntwx = 0</code>, no trajectory file is written. [Default =
+            0]</td>
+        <td>322</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">ntx</td>
+        <td>Specifies what will be read from the inpcrd file. This can be used with either ASCII or NetCDF formatted
+            data. <br> <code class="language-plaintext highlighter-rouge">= 1</code>: Coordinates will be read [Default]
+            <br> <code class="language-plaintext highlighter-rouge">= 5</code>: Coordinates and velocities will be read.
+            When <code class="language-plaintext highlighter-rouge">ntb &gt; 0</code>, box information read. Note: need
+            <code class="language-plaintext highlighter-rouge">irest = 1</code> to use velocity information.</td>
+        <td>321</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">pres0</td>
+        <td>The reference pressure (in bar, where 1 bar = 0.987 atm). [Default = 1]</td>
+        <td>328</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">restraint_wt</td>
+        <td>The weight of positional restraints (in kcal mol<sup>-1</sup>-Å<sup>2</sup>).</td>
+        <td>324</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">restraintmask</td>
+        <td>The string that explains what atoms should be restrained when <code
+                class="language-plaintext highlighter-rouge">ntr= 1</code>.</td>
+        <td>323</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">t</td>
+        <td>Specifies the time at the start (for personal reference). Automatically taken from an input file if <code
+                class="language-plaintext highlighter-rouge">IREST = 1</code>. <br> <code
+                class="language-plaintext highlighter-rouge">= 0.0</code>: [Default]</td>
+        <td>324</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">taup</td>
+        <td>Specifies the pressure relaxation time when <code
+                class="language-plaintext highlighter-rouge">nto &gt; 0</code>. Recommended to be between 1-5 ps.
+            Unstable trajectories may need a higher value. <br> <code
+                class="language-plaintext highlighter-rouge">= 1.0</code>: [Default]</td>
+        <td>328</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">tautp</td>
+        <td>Specifies the time constant (in ps) when <code class="language-plaintext highlighter-rouge">ntt = 1</code>.
+            Values should range from 0.5-5.0 ps; small values result in faster heating and less natural movement. <br>
+            <code class="language-plaintext highlighter-rouge">= 1.0</code>: [Default]</td>
+        <td>326</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">temp0</td>
+        <td>The temperature that systems with <code class="language-plaintext highlighter-rouge">ntt &gt; 0</code>
+            should be held constant at. <br> <code class="language-plaintext highlighter-rouge">= 300</code>: [Default]
+            <br> If greater than 300, reduce step size, because of potential for errors with SHAKE and other things.
+        </td>
+        <td>326</td>
+    </tr>
+    <tr role="row" class="odd">
+        <td class="sorting_1">tempi</td>
+        <td>Specifies the initial temperature, assigning velocites from a Maxwellian distribution. This has no impact if
+            <code class="language-plaintext highlighter-rouge">ntx &gt; 3</code> <br> <code
+                class="language-plaintext highlighter-rouge">= 0.0</code>: velocities calculated from the forces,
+            instead of assigned. [Default]</td>
+        <td>322</td>
+    </tr>
+    <tr role="row" class="even">
+        <td class="sorting_1">vlimit</td>
+        <td>Velocities greater than specified <code class="language-plaintext highlighter-rouge">vlimit</code> will be
+            reduced to it, keeping the sign, which helps avoid run instability. [Default = 20]</td>
+        <td>327</td>
+    </tr>
+</tbody>

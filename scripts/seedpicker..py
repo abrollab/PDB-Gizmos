@@ -12,11 +12,11 @@ import pandas as pd
 import mdtraj as md
 
 # pdbTools modules
-from moltools.debugg.logger import Logger
-from moltools.io.loader import iterload_by_group
-from moltools.utils.rmsd import calculate_rmsd
-from moltools.io.custom_args import ParseSelection
-from moltools.io.infile_handler import parse_infile
+from pdb_gizmpos.debugg.logger import Logger
+from pdb_gizmpos.io.loader import iterload_by_group
+from pdb_gizmpos.utils.rmsd import calculate_rmsd
+from pdb_gizmpos.io.custom_args import ParseSelection
+from pdb_gizmpos.io.infile_handler import parse_infile
 
 def get_index_by_group(labled_trajs, topology, group, stride=1):
     """ Returns a np.array containg the index of each frame within a group """

@@ -1,0 +1,6 @@
+mdtraj
+numpy
+scipy
+pandas
+pytraj
+requests

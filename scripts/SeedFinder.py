@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 
 #moltools imports
-from moltools.utils.trajmath import compute_tetravol
+from pdb_gizmpos.utils.trajmath import compute_tetravol
 
 def get_index(trajlist, topology, stride):
     """ returns an index of the trajectories"""
