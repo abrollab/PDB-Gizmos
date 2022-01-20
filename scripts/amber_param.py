@@ -21,7 +21,7 @@ def parse_and_extract(html_file):
 
     """
     contents = open(html_file).read()
-    soup = BeautifulSoup(contents)
+    soup = BeautifulSoup(contents, features="html.parser")
     table_rows = soup.find_all("tr")
 
     amber_params = []
@@ -79,7 +79,13 @@ def help_message():
                         uses provided a parameter that does not exists, "N/A" will be returned
                         under the description column
 
-                 """)
+    Current Amber18 input paramters:
+    --------------------------------
+    ['parameter', 'barostat', 'cut', 'dt', 'gamma_ln', 'ibelly', 'ig', 'imin', 'ioutfm', 'irest',
+    'iwrap', 'maxcyc', 'ncyc', 'nmropt', 'nsnb', 'nstlim', 'ntb', 'ntc', 'ntf', 'ntp', 'ntpr',
+    'ntr', 'ntt', 'ntwv', 'ntwx', 'ntx', 'pres0', 'restraint_wt', 'restraintmask', 't', 'taup',
+    'tautp', 'temp0', 'tempi', 'vlimit']
+    """)
     print(msg)
     exit()
 
@@ -106,6 +112,7 @@ if __name__ == "__main__":
     # parsing html contens and extact parameters and description
     contents = parse_and_extract(html_file)
 
+
     # checking if the user wanted specific definition or all
     if args.search is None:
         print(tabulate(contents, headers="firstrow",
@@ -128,3 +135,4 @@ if __name__ == "__main__":
 
         print(tabulate(selected_params, headers="firstrow",
                        tablefmt="fancy_grid"))
+    sys.exit("Process complete!")
