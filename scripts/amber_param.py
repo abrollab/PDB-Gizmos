@@ -73,11 +73,10 @@ def help_message():
     python amber_params.py --help
 
     PARAMETERS:
-    -s, --search        If not flagged, all paramters and descriptions and paramters
-                        are shown. For searching specific paramters, flag the the argument
-                        and add amber specific amber paramters (look at USAGE #2). If the
-                        uses provided a parameter that does not exists, "N/A" will be returned
-                        under the description column
+    -s, --search        If not flagged, all paramters and descriptions are shown. For searching
+                        specific paramters, flag the "-s" argument and add amber specific amber
+                        paramters (look at USAGE #2). If the user provides a parameter that does
+                        not exists, "N/A" will be returned under the description column
 
     Current Amber18 input paramters:
     --------------------------------
