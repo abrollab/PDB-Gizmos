@@ -17,7 +17,7 @@ class CheckResRangeFormat(argparse.Action):
         range_check = values.split()
         if len(range_check) != 3 and len(range_check) != 1:
             raise ValueError("Incorrect format or invalid argument values provided: Example argumet input: '-r 100-300'")
-        
+
         selected_range = "".join(values.split())
         setattr(namespace, self.dest, selected_range)
 
@@ -46,7 +46,7 @@ def cpptraj_executer(trajpaths, top_file, resrange, outname=None):
         # output
         cpptraj_infile.write("trajout {}.nc\n".format(outname))
         cpptraj_infile.write("go")
-    
+
     # execute process
     cpptraj_cmd = "cpptraj -i temp_cpptraj.in".split()
     cpptraj_proc = subprocess.run(cpptraj_cmd, shell=False, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -72,7 +72,7 @@ def help_message():
     Required:
     -x, --trajs           Trajectory file(s)
     -p, --topology        Topology file (.prmtop)
-    -r, --resrange        Selection of resiudes kept after stripping 
+    -r, --resrange        Selection of resiudes kept after stripping
 
     Optional:
     -o, --output          name of the output rst files [Default: None]
@@ -98,12 +98,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(add_help=False)
     required = parser.add_argument_group("Required Arguments")
     optional = parser.add_argument_group("Optional Arguments")
-    required.add_argument("-i", "--input", nargs="+", required=True)
-    required.add_argument("-t", "--topology", type=str, required=True)
+    required.add_argument("-x", "--traj", nargs="+", required=True)
+    required.add_argument("-p", "--topology", type=str, required=True)
     required.add_argument("-r", "--resrange", type=str, action=CheckResRangeFormat, required=True, default=None)
     optional.add_argument("-o", "--output", type=str, required=False, default=None)
     args = parser.parse_args()
 
     # main code
     # -- creating cpptraj inputfile and executing cpptraj
-    cpptraj_executer(args.input, args.topology, resrange=args.resrange, outname=args.output)
+    cpptraj_executer(args.traj, args.topology, resrange=args.resrange, outname=args.output)

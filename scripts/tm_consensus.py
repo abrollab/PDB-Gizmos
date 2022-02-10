@@ -11,15 +11,18 @@ from bs4 import BeautifulSoup
 __version__ = "0.1.1"
 
 # External requests
-def get_pdbtm_xml(pdbid, buffer=1):
+def get_pdbtm_xml(pdbid, buffer=0.5):
     """ Connects to pdbTM database and return xml file"""
     if len(pdbid) != 4:
         raise ValueError("Incorrect pdbid was porvided")
     pdb_tag = pdbid[1:3]
     pdbtm_url = "http://pdbtm.enzim.hu/data/database/{}/{}.xml".format(pdb_tag, pdbid)
-    xml = requests.get(pdbtm_url).content
+    xml = requests.get(pdbtm_url)
+    if xml.status_code != 200:
+        raise ConnectionError("pdbid {} does not exist".format(pdbid))
     sleep(buffer) # Time buffer to prevent spam requesting for servers
-    return xml
+    xml_cont = xml.content
+    return xml_cont
 
 
 # main functions used
@@ -111,10 +114,10 @@ def help_message():
 
     OPTIONAL:
     ----------
-    --offset         Shifting the consensus resid range. Values 
+    --offset         Shifting the consensus resid range. Values
                      can be postive or negative. [Default: 0]
                      """.format(__version__))
-    
+
     print(message)
     exit()
 

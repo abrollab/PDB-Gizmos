@@ -1,5 +1,6 @@
 #!/home/exec/anaconda3/bin/python
 import sys
+import os
 import argparse
 from textwrap import dedent
 from collections import defaultdict
@@ -106,7 +107,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # load in file
-    html_file = "./data/amber18_params.html"
+    # html_file = "./data/amber18_params.html"
+    script_dir = os.path.abspath(__file__).rsplit("/", 1)[0]
+
+    html_file = os.path.join(script_dir, "data/amber18_params.html")
+    if not os.path.exists(html_file):
+        raise RuntimeError("Unable to find parsable contents")
 
     # parsing html contens and extact parameters and description
     contents = parse_and_extract(html_file)

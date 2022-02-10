@@ -17,7 +17,7 @@ class CheckResRangeFormat(argparse.Action):
         range_check = values.split()
         if len(range_check) != 3 and len(range_check) != 1:
             raise ValueError("Incorrect format or invalid argument values provided: Example argumet input: '-r 100-300'")
-        
+
         selected_range = "".join(values.split())
         setattr(namespace, self.dest, selected_range)
 
@@ -26,9 +26,6 @@ def cpptraj_executer(trajpaths, top_file, resrange=None, outname=None):
     with open("temp_cpptraj.in", "w") as cpptraj_infile:
         cpptraj_infile.write("parm {}\n".format(top_file))
 
-        # adding trajectories
-        if outname is None:
-            outname = "ai_traj-{}".format(datetime.strftime("%m%d%y-%H%M%S"))
         for traj_path in trajpaths:
             cpptraj_infile.write("trajin {}\n".format(traj_path))
 
@@ -49,7 +46,7 @@ def cpptraj_executer(trajpaths, top_file, resrange=None, outname=None):
     if cpptraj_proc.returncode != 0:
         raise subprocess.CalledProcessError("Cpptraj has captured and error, please run the code natively by typing 'cpptraj -i temp_cpptraj.in' on your terminal")
 
-    print("Autoimaged trajectory created in: {}".format(os.path.realpath(outname)))
+    print("Autoimaged trajectory created in: {}.nc".format(os.path.realpath(outname)))
     #os.remove("temp_cpptraj.in")
 
 
@@ -70,7 +67,9 @@ def help_message():
     -p, --topology        Topology file (.prmtop)
 
     Optional:
-    -r, --resrange        Index selection by range [Default: None]
+    -r, --resrange        Index selection by range [Default: None]. If None,
+                          it will utlize Cpptraj default parameters. If range
+                          is provided, autoimaging will focus on that range.
     -o, --output          name of the output rst files [Default: None]
 
     """).format(__version__))
@@ -85,9 +84,11 @@ if __name__ == "__main__":
         raise RuntimeError("Cannot find cpptraj xecutable")
 
     # checking help message
-    if len(sys.argv) == 1:
+    if len(sys.argv) == 1 or len(sys.argv) == 2:
         help_message()
     elif sys.argv[1] == "-h" or sys.argv[1].lower() == "--help":
+        help_message()
+    elif sys.argv[2] == "-h" or sys.argv[2].lower() == "--help":
         help_message()
 
     # CLI Arguments
@@ -96,8 +97,8 @@ if __name__ == "__main__":
     optional = parser.add_argument_group("Optional Arguments")
     required.add_argument("-x", "--trajs", nargs="+", required=True)
     required.add_argument("-p", "--topology", type=str, required=True)
+    required.add_argument("-o", "--output", type=str, required=True, default=None)
     optional.add_argument("-r", "--resrange", type=str, action=CheckResRangeFormat, required=False, default=None)
-    optional.add_argument("-o", "--output", type=str, required=False, default=None)
     args = parser.parse_args()
 
     # main code

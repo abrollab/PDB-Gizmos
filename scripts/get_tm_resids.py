@@ -23,8 +23,9 @@ def get_tm_regions(pdbtm_xml):
                         tmregions_data.append(row_data)
     return tmregions_data
 
+
 if __name__ == "__main__":
-    
+
     # cli arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input", type=str, required=True, help="pdbid", metavar="PDBID" )
@@ -37,8 +38,8 @@ if __name__ == "__main__":
         raise ConnectionAbortedError("Invalid pdbid has been give, or there is no internet connection")
     xml = r.text
     data = get_tm_regions(xml)
-    
-    cols = "tm_beg, tm_end, tm_length" 
+
+    cols = "tm_beg, tm_end, tm_length"
     print(args.input)
     print(cols)
     outfile_name = "{}_tm_lengths.csv".format(args.input)

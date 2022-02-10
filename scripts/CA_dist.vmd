@@ -1,0 +1,23 @@
+set sel0 [atomselect top "resid  135 and name CA"]
+set sel1 [atomselect top "resid  271 and name CA"]
+set selall [atomselect top "resid 135 271 and name CA"]
+
+set nf [molinfo top get numframes]
+
+set outfile [open CA_resid135-271_dist.csv w]
+
+puts $outfile "frame,dist"
+for {set i 0} {$i < $nf} {incr i} {
+   $sel0 frame $i
+   $sel1 frame $i
+   $selall frame $i 
+
+   set c0 [measure center $sel0]
+   set c1 [measure center $sel1]
+   set d0 [vecdist $c0 $c1]
+   puts $outfile "$i,$d0"
+
+} 
+close $outfile
+
+
