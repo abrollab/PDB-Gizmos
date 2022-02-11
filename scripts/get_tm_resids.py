@@ -21,6 +21,7 @@ def get_tm_regions(pdbtm_xml):
                     if helix_check == "H":
                         row_data = "{},{},{}".format(data["pdb_beg"], data["pdb_end"], int(data["pdb_end"]) - int(data["pdb_beg"])  + 1)
                         tmregions_data.append(row_data)
+    print("its done")
     return tmregions_data
 
 
